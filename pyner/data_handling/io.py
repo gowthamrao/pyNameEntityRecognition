@@ -20,26 +20,30 @@ def biores_to_entities(tagged_tokens: List[Tuple[str, str]]) -> Entities:
     current_entity_type: Optional[str] = None
 
     for token, tag in tagged_tokens:
-        prefix = tag[0]
+        prefix = tag[0] if tag != 'O' else 'O'
         entity_type = tag[2:] if len(tag) > 1 else None
 
-        is_new_entity = prefix in ('B', 'S')
-        is_end_of_entity = prefix in ('S', 'E', 'O', 'B')
-
-        if current_entity_tokens and is_end_of_entity:
-            if current_entity_type:
-                entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
+        # If we are in an entity and the new tag indicates an end or a new entity
+        if current_entity_type and prefix in ('B', 'S', 'O'):
+            entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
             current_entity_tokens = []
             current_entity_type = None
 
-        if is_new_entity:
+        # Start a new entity
+        if prefix in ('B', 'S'):
             current_entity_tokens.append(token)
             current_entity_type = entity_type
-        elif prefix == 'I' and current_entity_type == entity_type:
-            current_entity_tokens.append(token)
-        elif prefix == 'E' and current_entity_type == entity_type:
+        # Continue an existing entity
+        elif prefix in ('I', 'E') and entity_type == current_entity_type:
             current_entity_tokens.append(token)
 
+        # If the tag is an end or a single-token entity, close it
+        if current_entity_type and prefix in ('E', 'S'):
+            entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
+            current_entity_tokens = []
+            current_entity_type = None
+
+    # Add any remaining entity
     if current_entity_tokens and current_entity_type:
         entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
 
