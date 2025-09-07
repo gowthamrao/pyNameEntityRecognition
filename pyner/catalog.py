@@ -331,6 +331,94 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract names of specific individuals, such as researchers, authors, or principal investigators. Examples: 'Dr. John Smith', 'the research team of Jane Doe'.",
         "category": "ORGANIZATIONS_AND_CONTEXT",
     },
+
+    # Category: VETERINARY_MEDICINE
+    "AnimalSpecies": {
+        "name": "Animal Species",
+        "description": "Extract the species of animal being studied, including common names and scientific names. Examples: 'mice', 'Felis catus', 'bovine', 'zebrafish'.",
+        "category": "VETERINARY_MEDICINE",
+    },
+    "VeterinaryDrug": {
+        "name": "Veterinary Drug",
+        "description": "Extract drugs, vaccines, or therapeutic substances specifically formulated or used for animals. Examples: 'Ivermectin', 'Rimadyl', 'Bravecto', 'Feline leukemia vaccine'.",
+        "category": "VETERINARY_MEDICINE",
+    },
+    "AnimalDisease": {
+        "name": "Animal Disease",
+        "description": "Extract diseases, syndromes, or conditions that primarily affect animals. Examples: 'canine parvovirus', 'foot-and-mouth disease', 'avian influenza', 'heartworm disease'.",
+        "category": "VETERINARY_MEDICINE",
+    },
+    "VeterinaryProcedure": {
+        "name": "Veterinary Procedure",
+        "description": "Extract diagnostic, therapeutic, or surgical procedures performed on animals. Examples: 'spaying', 'dehorning', 'equine lameness examination', 'necropsy'.",
+        "category": "VETERINARY_MEDICINE",
+    },
+
+    # Category: HEALTHCARE_ECONOMICS_AND_POLICY
+    "HealthcareCost": {
+        "name": "Healthcare Cost",
+        "description": "Extract mentions of monetary costs, expenses, or economic values related to healthcare services, drugs, or equipment. Examples: '$50 per treatment', 'hospitalization costs of $10,000', 'insurance reimbursement'.",
+        "category": "HEALTHCARE_ECONOMICS_AND_POLICY",
+    },
+    "EconomicOutcome": {
+        "name": "Economic Outcome",
+        "description": "Extract metrics used in health economics to evaluate the value or efficiency of an intervention. Examples: 'Quality-Adjusted Life-Year (QALY)', 'cost-benefit ratio', 'incremental cost-effectiveness ratio (ICER)'.",
+        "category": "HEALTHCARE_ECONOMICS_AND_POLICY",
+    },
+    "HealthPolicy": {
+        "name": "Health Policy",
+        "description": "Extract specific laws, regulations, or official guidelines from government or health organizations that affect healthcare. Examples: 'Medicare policy', 'the Affordable Care Act', 'vaccination mandate'.",
+        "category": "HEALTHCARE_ECONOMICS_AND_POLICY",
+    },
+    "InsuranceProvider": {
+        "name": "Insurance Provider",
+        "description": "Extract names of health insurance companies or public payers. Examples: 'Blue Cross Blue Shield', 'UnitedHealthcare', 'Medicaid', 'NHS'.",
+        "category": "HEALTHCARE_ECONOMICS_AND_POLICY",
+    },
+
+    # Category: PUBLIC_HEALTH_AND_SYSTEMS
+    "PublicHealthIntervention": {
+        "name": "Public Health Intervention",
+        "description": "Extract programs or strategies aimed at improving the health of a population. Examples: 'smoking cessation campaign', 'water fluoridation', 'nationwide screening program', 'public health advisory'.",
+        "category": "PUBLIC_HEALTH_AND_SYSTEMS",
+    },
+    "HealthSystem": {
+        "name": "Health System",
+        "description": "Extract terms describing the organization of people, institutions, and resources that deliver health care services. Examples: 'National Health Service (NHS)', 'single-payer system', 'integrated delivery network'.",
+        "category": "PUBLIC_HEALTH_AND_SYSTEMS",
+    },
+    "CareGuideline": {
+        "name": "Care Guideline",
+        "description": "Extract official recommendations for the treatment or management of a condition. Examples: 'ACC/AHA guidelines', 'NICE guidelines', 'standard treatment protocol'.",
+        "category": "PUBLIC_HEALTH_AND_SYSTEMS",
+    },
+    "HealthDisparity": {
+        "name": "Health Disparity",
+        "description": "Extract mentions of differences in health outcomes between groups of people. Examples: 'health outcomes by income', 'racial health gap', 'disparities in access to care'.",
+        "category": "PUBLIC_HEALTH_AND_SYSTEMS",
+    },
+
+    # Category: BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY
+    "SoftwareTool": {
+        "name": "Software Tool",
+        "description": "Extract names of specific software, packages, or tools used for data analysis in biomedical research. Examples: 'BLAST', 'GATK', 'R package Seurat', 'ImageJ'.",
+        "category": "BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY",
+    },
+    "BiologicalDatabase": {
+        "name": "Biological Database",
+        "description": "Extract names of databases or repositories storing biological data. Examples: 'GenBank', 'Protein Data Bank (PDB)', 'The Cancer Genome Atlas (TCGA)', 'UniProt'.",
+        "category": "BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY",
+    },
+    "Algorithm": {
+        "name": "Algorithm",
+        "description": "Extract names of specific algorithms used for computational analysis. Examples: 'Smith-Waterman algorithm', 'UMAP', 't-SNE', 'Bowtie algorithm'.",
+        "category": "BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY",
+    },
+    "DataFormat": {
+        "name": "Data Format",
+        "description": "Extract file formats or data structures used in bioinformatics. Examples: 'FASTA format', 'VCF file', 'BAM', 'FASTQ'.",
+        "category": "BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY",
+    },
 }
 
 
@@ -393,6 +481,45 @@ PRESETS: Dict[str, List[str]] = {
         "MolecularFunction",
         "LaboratoryProcedure",
         "PathologicFunction",
+    ],
+    "VETERINARY_RESEARCH": [
+        "AnimalSpecies",
+        "VeterinaryDrug",
+        "AnimalDisease",
+        "VeterinaryProcedure",
+        "PopulationGroup",
+        "StudyDesign",
+    ],
+    "HEALTH_ECONOMICS": [
+        "DiseaseOrSyndrome",
+        "ClinicalDrug",
+        "TherapeuticProcedure",
+        "HealthcareCost",
+        "EconomicOutcome",
+        "HealthPolicy",
+        "InsuranceProvider",
+        "PopulationGroup",
+    ],
+    "PUBLIC_HEALTH": [
+        "DiseaseOrSyndrome",
+        "PublicHealthIntervention",
+        "HealthSystem",
+        "CareGuideline",
+        "HealthDisparity",
+        "PopulationGroup",
+        "DemographicCharacteristic",
+        "EpidemiologicalMetric",
+        "Location",
+    ],
+    "BIOINFORMATICS": [
+        "GeneOrGenome",
+        "Protein",
+        "GeneticVariant",
+        "SoftwareTool",
+        "BiologicalDatabase",
+        "Algorithm",
+        "DataFormat",
+        "LaboratoryProcedure",
     ],
     "COMPREHENSIVE": list(ENTITY_REGISTRY.keys()),
 }
