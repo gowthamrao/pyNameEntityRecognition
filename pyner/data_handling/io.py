@@ -1,14 +1,73 @@
 import asyncio
+import inspect
+import logging
 from typing import Any, List, Tuple, Dict, Union, Type, AsyncGenerator, Optional
 
 import pandas as pd
 from datasets import Dataset
 from pydantic import BaseModel
 
+from pyner.catalog import get_schema
 from pyner.core.engine import CoreEngine
 from pyner.models.config import ModelConfig
 from pyner.models.factory import ModelFactory
 from pyner.schemas.core_schemas import BaseEntity, Entities
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+
+def _resolve_schema(schema_input: Union[Type[BaseModel], str, Dict[str, Any]]) -> Type[BaseModel]:
+    """
+    Helper function to resolve various input types into a Pydantic BaseModel.
+
+    This function enables flexible schema definition by accepting:
+    1. A direct Pydantic model class (for backward compatibility).
+    2. A string representing a preset name from the catalog.
+    3. A dictionary with configuration options for dynamic schema generation.
+
+    Args:
+        schema_input: The schema definition to resolve.
+
+    Returns:
+        A Pydantic BaseModel class ready for use in extraction.
+
+    Raises:
+        TypeError: If the schema_input is of an unsupported type.
+        ValueError: If a dictionary configuration for get_schema is invalid.
+    """
+    if isinstance(schema_input, str):
+        # Case 2: Input is a preset name from the catalog
+        logger.info(f"Resolving schema from preset: '{schema_input}'")
+        return get_schema(preset=schema_input)
+
+    elif isinstance(schema_input, dict):
+        # Case 3: Input is a configuration dictionary for get_schema
+        logger.info("Resolving schema from configuration dictionary.")
+
+        # Ensure the dictionary keys are valid arguments for get_schema
+        valid_keys = inspect.signature(get_schema).parameters.keys()
+        config = {k: v for k, v in schema_input.items() if k in valid_keys}
+
+        if len(config) != len(schema_input):
+            invalid_keys = set(schema_input.keys()) - set(config.keys())
+            logger.warning(f"Invalid keys found and ignored in schema configuration: {invalid_keys}")
+
+        if not config:
+            raise ValueError("Invalid or empty configuration dictionary provided for schema generation.")
+
+        return get_schema(**config)
+
+    elif inspect.isclass(schema_input) and issubclass(schema_input, BaseModel):
+        # Case 1: Input is a direct Pydantic model (backward compatibility)
+        logger.info("Using provided Pydantic model as schema.")
+        return schema_input
+
+    else:
+        raise TypeError(
+            f"Invalid schema input type: {type(schema_input)}. "
+            "Expected a Pydantic BaseModel class, a string (preset name), or a dict (configuration)."
+        )
 
 
 def biores_to_entities(tagged_tokens: List[Tuple[str, str]]) -> Entities:
@@ -85,7 +144,7 @@ async def _yield_texts(input_data: Any, text_column: Optional[str]) -> AsyncGene
 
 async def extract_entities(
     input_data: Any,
-    schema: Type[BaseModel],
+    schema: Union[Type[BaseModel], str, Dict[str, Any]],
     text_column: Optional[str] = None,
     model_config: Optional[Union[Dict, ModelConfig]] = None,
     mode: str = "lcel",
@@ -93,6 +152,22 @@ async def extract_entities(
 ) -> Union[List[Any], Any]:
     """
     High-level public API for extracting entities from various input sources.
+
+    Args:
+        input_data: The data to process. Can be a string, list of strings,
+                    pandas DataFrame, or Hugging Face Dataset.
+        schema: The extraction schema definition. Can be:
+                1. A Pydantic model class (backward compatibility).
+                2. A string representing a preset name from the catalog (e.g., "CLINICAL_TRIAL_CORE").
+                3. A dictionary for dynamic schema configuration (passed to `catalog.get_schema`).
+        text_column: The name of the column containing text to process (for DataFrames/Datasets).
+        model_config: Configuration for the language model.
+        mode: The extraction mode to use ('lcel' or 'agentic').
+        output_format: The desired output format ('conll' or 'json').
+
+    Returns:
+        The extracted entities, formatted as specified. Returns a single result
+        for a string input, or a list of results for iterable inputs.
     """
     if model_config is None:
         model_config_obj = ModelConfig()
@@ -101,11 +176,11 @@ async def extract_entities(
     else:
         model_config_obj = model_config
 
-    if not issubclass(schema, BaseModel):
-        raise TypeError("The provided schema must be a Pydantic BaseModel subclass.")
+    # Resolve the flexible schema input into a concrete Pydantic model
+    resolved_schema = _resolve_schema(schema)
 
     model = ModelFactory.create(model_config_obj)
-    engine = CoreEngine(model=model, schema=schema)
+    engine = CoreEngine(model=model, schema=resolved_schema)
 
     texts_to_process = []
     async for text, _ in _yield_texts(input_data, text_column):
