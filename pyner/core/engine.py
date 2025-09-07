@@ -1,11 +1,11 @@
 import asyncio
 import json
-from typing import Type, List, Tuple, TypedDict, Optional
+from typing import List, Optional, Tuple, Type, TypedDict
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
+from langgraph.graph import END, StateGraph
 from pydantic import BaseModel
-from langgraph.graph import StateGraph, END
 
 from pyner.data_handling.chunking import chunk_text_with_offsets
 from pyner.data_handling.merging import ChunkMerger
@@ -48,25 +48,36 @@ class CoreEngine:
             entities = await self._get_intermediate_entities(text, mode)
             return self.biores_converter.convert(text, entities)
 
-        chunks_with_offsets = chunk_text_with_offsets(text, self.chunk_size, self.chunk_overlap)
-        tasks = [self._get_intermediate_entities(chunk, mode) for chunk, _ in chunks_with_offsets]
+        chunks_with_offsets = chunk_text_with_offsets(
+            text, self.chunk_size, self.chunk_overlap
+        )
+        tasks = [
+            self._get_intermediate_entities(chunk, mode)
+            for chunk, _ in chunks_with_offsets
+        ]
         chunk_entities_list = await asyncio.gather(*tasks)
         chunk_results = [
             (entities, offset, offset + len(chunk))
-            for (chunk, offset), entities in zip(chunks_with_offsets, chunk_entities_list)
+            for (chunk, offset), entities in zip(
+                chunks_with_offsets, chunk_entities_list
+            )
         ]
         return self.merger.merge(text, chunk_results)
 
-    async def _get_intermediate_entities(self, text: str, mode: str) -> List[BaseEntity]:
+    async def _get_intermediate_entities(
+        self, text: str, mode: str
+    ) -> List[BaseEntity]:
         if mode == "lcel":
             llm_output = await self._run_lcel_chain(text)
             return self._transform_to_base_entities(llm_output)
         elif mode == "agentic":
-            final_state = await self._agentic_graph_app.ainvoke({
-                "original_text": text,
-                "extraction_schema": self.schema,
-                "retry_count": 0,
-            })
+            final_state = await self._agentic_graph_app.ainvoke(
+                {
+                    "original_text": text,
+                    "extraction_schema": self.schema,
+                    "retry_count": 0,
+                }
+            )
             return final_state.get("validated_entities") or []
         else:
             raise ValueError(f"Unknown execution mode: '{mode}'")
@@ -107,7 +118,9 @@ class CoreEngine:
         entities = self._transform_to_base_entities(llm_output)
         for entity in entities:
             if entity.text not in original_text:
-                errors.append(f"Validation Error: The extracted span '{entity.text}' was not found in the original text.")
+                errors.append(
+                    f"Validation Error: The extracted span '{entity.text}' was not found in the original text."
+                )
         if errors:
             return {"validation_errors": errors, "validated_entities": None}
         return {"validation_errors": None, "validated_entities": entities}
@@ -117,7 +130,11 @@ class CoreEngine:
         previous_output = state["llm_output"]
         errors = state["validation_errors"]
         error_str = "\n- ".join(errors or [])
-        previous_output_str = json.dumps(previous_output.model_dump(), indent=2) if previous_output else "{}"
+        previous_output_str = (
+            json.dumps(previous_output.model_dump(), indent=2)
+            if previous_output
+            else "{}"
+        )
         system_template = (
             "You are an extraction AI. You previously tried to extract entities but made mistakes. "
             "Review your previous output and the specific validation errors below, then try again. "
@@ -131,8 +148,12 @@ class CoreEngine:
             "Please correct these errors and provide a new, valid JSON object."
         )
         human_template = "Source Text:\n```\n{text_input}\n```"
-        prompt = ChatPromptTemplate.from_messages([("system", system_template), ("human", human_template)])
-        chain = prompt.partial(previous_output=previous_output_str, errors=error_str) | self.model.with_structured_output(state["extraction_schema"])
+        prompt = ChatPromptTemplate.from_messages(
+            [("system", system_template), ("human", human_template)]
+        )
+        chain = prompt.partial(
+            previous_output=previous_output_str, errors=error_str
+        ) | self.model.with_structured_output(state["extraction_schema"])
         new_llm_output = await chain.ainvoke({"text_input": text_input})
         return {"llm_output": new_llm_output, "retry_count": state["retry_count"] + 1}
 
@@ -151,5 +172,7 @@ class CoreEngine:
                 extracted_spans = [extracted_spans]
             for span_text in extracted_spans:
                 if isinstance(span_text, str) and span_text:
-                    base_entities.append(BaseEntity(type=entity_type.capitalize(), text=span_text))
+                    base_entities.append(
+                        BaseEntity(type=entity_type.capitalize(), text=span_text)
+                    )
         return base_entities

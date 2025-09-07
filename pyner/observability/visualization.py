@@ -1,11 +1,18 @@
 import hashlib
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
 
 # A simple color palette for fallbacks, can be extended
 _COLOR_PALETTE = [
-    "#ff6961", "#ffb480", "#f8f38d", "#42d6a4",
-    "#08cad1", "#59adf6", "#9d94ff", "#c780e8"
+    "#ff6961",
+    "#ffb480",
+    "#f8f38d",
+    "#42d6a4",
+    "#08cad1",
+    "#59adf6",
+    "#9d94ff",
+    "#c780e8",
 ]
+
 
 def _get_color(text: str) -> str:
     """
@@ -43,12 +50,12 @@ def render_biores_html(tagged_tokens: List[Tuple[str, str]]) -> str:
     colors: Dict[str, str] = {}
 
     for token, tag in tagged_tokens:
-        if tag == 'O':
+        if tag == "O":
             html_spans += f"{token} "
             continue
 
         try:
-            _, entity_type = tag.split('-', 1)
+            _, entity_type = tag.split("-", 1)
         except ValueError:
             html_spans += f"{token} "
             continue
@@ -67,17 +74,13 @@ def render_biores_html(tagged_tokens: List[Tuple[str, str]]) -> str:
             "border-radius: 0.35em;"
         )
 
-        label_style = (
-            "font-size: 0.8em; "
-            "font-weight: bold; "
-            "margin-left: 0.4em;"
-        )
+        label_style = "font-size: 0.8em; " "font-weight: bold; " "margin-left: 0.4em;"
 
         html_spans += (
             f'<span style="{style}">'
-            f'{token}'
+            f"{token}"
             f'<span style="{label_style}">{entity_type}</span>'
-            f'</span> '
+            f"</span> "
         )
 
     return f"""
@@ -94,6 +97,7 @@ def render_biores_html(tagged_tokens: List[Tuple[str, str]]) -> str:
     </html>
     """
 
+
 def display_biores(tagged_tokens: List[Tuple[str, str]]):
     """
     Displays the rendered BIOSES HTML in environments like Jupyter notebooks.
@@ -105,7 +109,8 @@ def display_biores(tagged_tokens: List[Tuple[str, str]]):
         tagged_tokens: A list of (token, BIOSES tag) tuples.
     """
     try:
-        from IPython.display import display, HTML
+        from IPython.display import HTML, display
+
         # We only need the inner part of the HTML for display, not the full document
         html_content = render_biores_html(tagged_tokens)
         display(HTML(html_content))

@@ -1,17 +1,23 @@
+from typing import List
+
 import pytest
 from pydantic import BaseModel, Field
-from typing import List
+
 from pyner.prompting.prompt_manager import PromptManager, ZeroShotStructured
+
 
 class SampleSchema(BaseModel):
     """A sample schema for testing."""
+
     person: List[str] = Field(description="The name of a person.")
     location: List[str] = Field(description="A physical location.")
+
 
 @pytest.fixture
 def prompt_manager():
     """Provides a PromptManager with the zero-shot strategy."""
     return PromptManager(strategy=ZeroShotStructured())
+
 
 def test_zero_shot_prompt_generation(prompt_manager):
     template = prompt_manager.get_prompt_template(schema=SampleSchema)
@@ -21,7 +27,9 @@ def test_zero_shot_prompt_generation(prompt_manager):
 
     # Check that the system message contains the schema descriptions
     system_message = template.messages[0].prompt.template
-    assert "You must extract entities that match the following schema:" in system_message
+    assert (
+        "You must extract entities that match the following schema:" in system_message
+    )
     assert "Person" in system_message
     assert "The name of a person." in system_message
     assert "Location" in system_message

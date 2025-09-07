@@ -49,7 +49,7 @@ def chunk_text_with_offsets(
             current_pos = pos + 1
         else:
             logger.warning(
-                f"Could not reliably find chunk in the original text. "
+                "Could not reliably find chunk in the original text. "
                 "This might occur with complex texts or normalization by the splitter. "
                 "The chunk will be skipped, which may affect the final output."
             )

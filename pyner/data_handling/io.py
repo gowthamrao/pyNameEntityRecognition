@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 import logging
-from typing import Any, List, Tuple, Dict, Union, Type, AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple, Type, Union
 
 import pandas as pd
 from datasets import Dataset
@@ -17,7 +17,9 @@ from pyner.schemas.core_schemas import BaseEntity, Entities
 logger = logging.getLogger(__name__)
 
 
-def _resolve_schema(schema_input: Union[Type[BaseModel], str, Dict[str, Any]]) -> Type[BaseModel]:
+def _resolve_schema(
+    schema_input: Union[Type[BaseModel], str, Dict[str, Any]]
+) -> Type[BaseModel]:
     """
     Helper function to resolve various input types into a Pydantic BaseModel.
 
@@ -51,10 +53,14 @@ def _resolve_schema(schema_input: Union[Type[BaseModel], str, Dict[str, Any]]) -
 
         if len(config) != len(schema_input):
             invalid_keys = set(schema_input.keys()) - set(config.keys())
-            logger.warning(f"Invalid keys found and ignored in schema configuration: {invalid_keys}")
+            logger.warning(
+                f"Invalid keys found and ignored in schema configuration: {invalid_keys}"
+            )
 
         if not config:
-            raise ValueError("Invalid or empty configuration dictionary provided for schema generation.")
+            raise ValueError(
+                "Invalid or empty configuration dictionary provided for schema generation."
+            )
 
         return get_schema(**config)
 
@@ -79,37 +85,49 @@ def biores_to_entities(tagged_tokens: List[Tuple[str, str]]) -> Entities:
     current_entity_type: Optional[str] = None
 
     for token, tag in tagged_tokens:
-        prefix = tag[0] if tag != 'O' else 'O'
+        prefix = tag[0] if tag != "O" else "O"
         entity_type = tag[2:] if len(tag) > 1 else None
 
         # If we are in an entity and the new tag indicates an end or a new entity
-        if current_entity_type and prefix in ('B', 'S', 'O'):
-            entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
+        if current_entity_type and prefix in ("B", "S", "O"):
+            entities.append(
+                BaseEntity(
+                    type=current_entity_type, text=" ".join(current_entity_tokens)
+                )
+            )
             current_entity_tokens = []
             current_entity_type = None
 
         # Start a new entity
-        if prefix in ('B', 'S'):
+        if prefix in ("B", "S"):
             current_entity_tokens.append(token)
             current_entity_type = entity_type
         # Continue an existing entity
-        elif prefix in ('I', 'E') and entity_type == current_entity_type:
+        elif prefix in ("I", "E") and entity_type == current_entity_type:
             current_entity_tokens.append(token)
 
         # If the tag is an end or a single-token entity, close it
-        if current_entity_type and prefix in ('E', 'S'):
-            entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
+        if current_entity_type and prefix in ("E", "S"):
+            entities.append(
+                BaseEntity(
+                    type=current_entity_type, text=" ".join(current_entity_tokens)
+                )
+            )
             current_entity_tokens = []
             current_entity_type = None
 
     # Add any remaining entity
     if current_entity_tokens and current_entity_type:
-        entities.append(BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens)))
+        entities.append(
+            BaseEntity(type=current_entity_type, text=" ".join(current_entity_tokens))
+        )
 
     return Entities(entities=entities)
 
 
-async def _yield_texts(input_data: Any, text_column: Optional[str]) -> AsyncGenerator[Tuple[str, Any], None]:
+async def _yield_texts(
+    input_data: Any, text_column: Optional[str]
+) -> AsyncGenerator[Tuple[str, Any], None]:
     """Asynchronously yields text and context from various input data types."""
     if isinstance(input_data, str):
         yield input_data, 0
@@ -194,6 +212,8 @@ async def extract_entities(
     elif output_format == "conll":
         output_results = conll_results
     else:
-        raise ValueError(f"Unsupported output format: '{output_format}'. Choose 'conll' or 'json'.")
+        raise ValueError(
+            f"Unsupported output format: '{output_format}'. Choose 'conll' or 'json'."
+        )
 
     return output_results[0] if isinstance(input_data, str) else output_results

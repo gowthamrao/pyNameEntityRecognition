@@ -64,7 +64,12 @@ class ZeroShotStructured(BasePromptStrategy):
             "Present your findings as a JSON object."
         )
 
-        human_message = "Please extract all entities from the following text:\n\n" "```text\n" "{text_input}\n" "```"
+        human_message = (
+            "Please extract all entities from the following text:\n\n"
+            "```text\n"
+            "{text_input}\n"
+            "```"
+        )
 
         prompt = ChatPromptTemplate.from_messages(
             [

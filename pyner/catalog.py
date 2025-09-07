@@ -9,7 +9,7 @@ to dynamically generate Pydantic models for extraction.
 """
 
 import logging
-from typing import TypedDict, List, Dict, Optional, Type, Set
+from typing import Dict, List, Optional, Set, Type, TypedDict
 
 from pydantic import BaseModel, Field, create_model
 
@@ -27,6 +27,7 @@ class EntityDefinition(TypedDict):
                      including examples of what to extract and what to avoid.
         category: The logical category of the entity (e.g., "Disorders", "Chemicals").
     """
+
     name: str
     description: str
     category: str
@@ -75,7 +76,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract abnormal physiological processes or states at the cellular or organ level. This describes the 'how' of a disease. Examples: 'inflammation', 'necrosis', 'fibrosis', 'cellular atypia', 'insulin resistance'.",
         "category": "DISORDERS_AND_FINDINGS",
     },
-
     # Category: CHEMICALS_AND_DRUGS
     "ClinicalDrug": {
         "name": "Clinical Drug",
@@ -117,7 +117,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract the path by which a drug, fluid, poison, or other substance is taken into the body. Examples: 'oral', 'intravenous', 'subcutaneous', 'intramuscular', 'topical'.",
         "category": "CHEMICALS_AND_DRUGS",
     },
-
     # Category: PROCEDURES_AND_INTERVENTIONS
     "TherapeuticProcedure": {
         "name": "Therapeutic Procedure",
@@ -144,7 +143,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract instruments, apparatuses, or implants used for medical purposes. Examples: 'pacemaker', 'stent', 'ventilator', 'catheter', 'syringe'.",
         "category": "PROCEDURES_AND_INTERVENTIONS",
     },
-
     # Category: ANATOMY_AND_PHYSIOLOGY
     "AnatomicalStructure": {
         "name": "Anatomical Structure",
@@ -166,7 +164,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract normal functions and processes of living organisms or their parts. Examples: 'metabolism', 'respiration', 'digestion', 'synaptic transmission', 'glomerular filtration'.",
         "category": "ANATOMY_AND_PHYSIOLOGY",
     },
-
     # Category: GENETICS_AND_MOLECULAR
     "GeneOrGenome": {
         "name": "Gene or Genome",
@@ -193,7 +190,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract activities occurring at the molecular level, such as catalysis or binding. Examples: 'DNA binding', 'kinase activity', 'receptor antagonist', 'ion transport'.",
         "category": "GENETICS_AND_MOLECULAR",
     },
-
     # Category: EPIDEMIOLOGY_AND_POPULATION
     "PopulationGroup": {
         "name": "Population Group",
@@ -225,7 +221,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract disease-causing microorganisms. Examples: 'Staphylococcus aureus', 'Human Immunodeficiency Virus (HIV)', 'SARS-CoV-2', 'bacteria', 'virus'.",
         "category": "EPIDEMIOLOGY_AND_POPULATION",
     },
-
     # Category: STUDY_DESIGN_AND_METRICS
     "StudyDesign": {
         "name": "Study Design",
@@ -252,7 +247,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract terms for systematic errors in study design or conduct that can lead to incorrect results. Examples: 'selection bias', 'recall bias', 'confounding', 'publication bias'.",
         "category": "STUDY_DESIGN_AND_METRICS",
     },
-
     # Category: CLINICAL_TRIAL_SPECIFICS
     "TrialPhase": {
         "name": "Trial Phase",
@@ -299,7 +293,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract the number of participants enrolled in a study. Look for explicit mentions of the sample size. Examples: 'a total of 500 patients', 'N=250', 'sample of 100 individuals'.",
         "category": "CLINICAL_TRIAL_SPECIFICS",
     },
-
     # Category: ORGANIZATIONS_AND_CONTEXT
     "PharmaceuticalCompany": {
         "name": "Pharmaceutical Company",
@@ -331,7 +324,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract names of specific individuals, such as researchers, authors, or principal investigators. Examples: 'Dr. John Smith', 'the research team of Jane Doe'.",
         "category": "ORGANIZATIONS_AND_CONTEXT",
     },
-
     # Category: VETERINARY_MEDICINE
     "AnimalSpecies": {
         "name": "Animal Species",
@@ -353,7 +345,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract diagnostic, therapeutic, or surgical procedures performed on animals. Examples: 'spaying', 'dehorning', 'equine lameness examination', 'necropsy'.",
         "category": "VETERINARY_MEDICINE",
     },
-
     # Category: HEALTHCARE_ECONOMICS_AND_POLICY
     "HealthcareCost": {
         "name": "Healthcare Cost",
@@ -375,7 +366,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract names of health insurance companies or public payers. Examples: 'Blue Cross Blue Shield', 'UnitedHealthcare', 'Medicaid', 'NHS'.",
         "category": "HEALTHCARE_ECONOMICS_AND_POLICY",
     },
-
     # Category: PUBLIC_HEALTH_AND_SYSTEMS
     "PublicHealthIntervention": {
         "name": "Public Health Intervention",
@@ -397,7 +387,6 @@ ENTITY_REGISTRY: Dict[str, EntityDefinition] = {
         "description": "Extract mentions of differences in health outcomes between groups of people. Examples: 'health outcomes by income', 'racial health gap', 'disparities in access to care'.",
         "category": "PUBLIC_HEALTH_AND_SYSTEMS",
     },
-
     # Category: BIOINFORMATICS_AND_COMPUTATIONAL_BIOLOGY
     "SoftwareTool": {
         "name": "Software Tool",
@@ -529,7 +518,10 @@ PRESETS: Dict[str, List[str]] = {
 # == DYNAMIC FUNCTIONS
 # ==============================================================================
 
-def register_entity(key: str, definition: EntityDefinition, overwrite: bool = False) -> None:
+
+def register_entity(
+    key: str, definition: EntityDefinition, overwrite: bool = False
+) -> None:
     """
     Adds or updates an entity definition in the central registry at runtime.
 
@@ -552,9 +544,7 @@ def register_entity(key: str, definition: EntityDefinition, overwrite: bool = Fa
 
 
 def _generate_pydantic_model(
-    model_name: str,
-    description: str,
-    entity_keys: Set[str]
+    model_name: str, description: str, entity_keys: Set[str]
 ) -> Type[BaseModel]:
     """
     Dynamically creates a Pydantic BaseModel from a set of entity keys.
@@ -568,7 +558,7 @@ def _generate_pydantic_model(
         A new Pydantic BaseModel class with the specified fields.
     """
     fields = {}
-    for key in sorted(list(entity_keys)):  # Sort for consistent model definition
+    for key in sorted(entity_keys):  # Sort for consistent model definition
         if key in ENTITY_REGISTRY:
             entity_def = ENTITY_REGISTRY[key]
             # Use the key as the field name. Pydantic fields should be valid identifiers.
@@ -581,10 +571,14 @@ def _generate_pydantic_model(
                 Field(default_factory=list, description=entity_def["description"]),
             )
         else:
-            logger.warning(f"Entity key '{key}' not found in registry and will be skipped.")
+            logger.warning(
+                f"Entity key '{key}' not found in registry and will be skipped."
+            )
 
     if not fields:
-        raise ValueError("Cannot generate a Pydantic model with no fields. Check your entity keys.")
+        raise ValueError(
+            "Cannot generate a Pydantic model with no fields. Check your entity keys."
+        )
 
     # Use pydantic.create_model to dynamically construct the BaseModel
     dynamic_model = create_model(
@@ -601,7 +595,7 @@ def get_schema(
     include_entities: Optional[List[str]] = None,
     exclude_entities: Optional[List[str]] = None,
     schema_name: str = "CustomNERSchema",
-    schema_description: str = "A dynamically generated Pydantic model for scientific NER."
+    schema_description: str = "A dynamically generated Pydantic model for scientific NER.",
 ) -> Type[BaseModel]:
     """
     Retrieves a dynamically generated Pydantic schema based on specified criteria.
@@ -632,18 +626,25 @@ def get_schema(
     if preset:
         preset_upper = preset.upper()
         if preset_upper not in PRESETS:
-            raise ValueError(f"Preset '{preset}' not found. Available presets: {list(PRESETS.keys())}")
+            raise ValueError(
+                f"Preset '{preset}' not found. Available presets: {list(PRESETS.keys())}"
+            )
         selected_entity_keys.update(PRESETS[preset_upper])
-        logger.info(f"Loaded {len(PRESETS[preset_upper])} entities from preset: {preset}")
+        logger.info(
+            f"Loaded {len(PRESETS[preset_upper])} entities from preset: {preset}"
+        )
 
     # 2. Add entities from included categories
     if include_categories:
         cat_keys = {
-            key for key, definition in ENTITY_REGISTRY.items()
+            key
+            for key, definition in ENTITY_REGISTRY.items()
             if definition["category"] in include_categories
         }
         selected_entity_keys.update(cat_keys)
-        logger.info(f"Added {len(cat_keys)} entities from categories: {include_categories}")
+        logger.info(
+            f"Added {len(cat_keys)} entities from categories: {include_categories}"
+        )
 
     # 3. Add specific entities
     if include_entities:
@@ -652,7 +653,9 @@ def get_schema(
 
     # 4. If no selections were made, default to comprehensive
     if not selected_entity_keys:
-        logger.warning("No preset, categories, or entities specified. Defaulting to 'COMPREHENSIVE' preset.")
+        logger.warning(
+            "No preset, categories, or entities specified. Defaulting to 'COMPREHENSIVE' preset."
+        )
         selected_entity_keys.update(PRESETS["COMPREHENSIVE"])
 
     # 5. Remove any excluded entities
@@ -670,9 +673,11 @@ def get_schema(
         )
 
     # 7. Generate the Pydantic model
-    logger.info(f"Generating schema '{schema_name}' with {len(selected_entity_keys)} total fields.")
+    logger.info(
+        f"Generating schema '{schema_name}' with {len(selected_entity_keys)} total fields."
+    )
     return _generate_pydantic_model(
         model_name=schema_name,
         description=schema_description,
-        entity_keys=selected_entity_keys
+        entity_keys=selected_entity_keys,
     )
