@@ -34,12 +34,12 @@ class BIOSESConverter:
             logger.info("No spaCy model provided. Loading 'en_core_web_sm' by default.")
             try:
                 self.nlp = spacy.load("en_core_web_sm")
-            except OSError:
+            except OSError as e:
                 logger.error(
                     "Could not load 'en_core_web_sm'. Please run the following command to install it:\n"
                     "python -m spacy download en_core_web_sm"
                 )
-                raise IOError("Default spaCy model not found.")
+                raise OSError("Default spaCy model not found.") from e
 
     def convert(self, text: str, entities: List[BaseEntity]) -> List[Tuple[str, str]]:
         """
@@ -107,7 +107,9 @@ class BIOSESConverter:
                         tags[span.end - 1] = f"E-{entity.type}"
 
             except re.error as e:
-                logger.warning(f"Could not compile regex for entity text: '{entity.text}'. Error: {e}")
+                logger.warning(
+                    f"Could not compile regex for entity text: '{entity.text}'. Error: {e}"
+                )
                 continue
 
         return list(zip([token.text for token in doc], tags))

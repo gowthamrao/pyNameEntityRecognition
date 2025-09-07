@@ -1,69 +1,76 @@
-import pytest
 import json
+
+import pytest
+
 from pyner.core.engine import CoreEngine
 
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def sample_text():
     return "Alice lives in Paris and Bob lives in London."
 
+
 async def test_engine_lcel_path_success(fake_llm_factory, test_schema, sample_text):
     """Tests the end-to-end LCEL path with a successful extraction."""
     responses = [
-        json.dumps({
-            "Person": ["Alice", "Bob"],
-            "Location": ["Paris", "London"]
-        })
+        json.dumps({"Person": ["Alice", "Bob"], "Location": ["Paris", "London"]})
     ]
     llm = fake_llm_factory(responses)
     engine = CoreEngine(model=llm, schema=test_schema)
 
     result = await engine.run(sample_text, mode="lcel")
 
-    result_dict = {token: tag for token, tag in result}
+    result_dict = dict(result)
     assert result_dict["Alice"] == "S-Person"
     assert result_dict["Bob"] == "S-Person"
     assert result_dict["Paris"] == "S-Location"
     assert result_dict["London"] == "S-Location"
     assert result_dict["lives"] == "O"
 
+
 async def test_engine_agentic_path_success(fake_llm_factory, test_schema, sample_text):
     """Tests the agentic path where validation succeeds on the first try."""
     responses = [
-        json.dumps({
-            "Person": ["Alice", "Bob"],
-            "Location": ["Paris", "London"]
-        })
+        json.dumps({"Person": ["Alice", "Bob"], "Location": ["Paris", "London"]})
     ]
     llm = fake_llm_factory(responses)
     engine = CoreEngine(model=llm, schema=test_schema)
 
     result = await engine.run(sample_text, mode="agentic")
 
-    result_dict = {token: tag for token, tag in result}
+    result_dict = dict(result)
     assert result_dict["Alice"] == "S-Person"
     assert result_dict["Bob"] == "S-Person"
 
-async def test_engine_agentic_path_refinement(fake_llm_factory, test_schema, sample_text):
+
+async def test_engine_agentic_path_refinement(
+    fake_llm_factory, test_schema, sample_text
+):
     """Tests the agentic path with one round of refinement."""
     responses = [
-        json.dumps({"Person": ["Alice"], "Location": ["Zurich"]}), # Bad
-        json.dumps({"Person": ["Alice", "Bob"], "Location": ["Paris", "London"]}) # Good
+        json.dumps({"Person": ["Alice"], "Location": ["Zurich"]}),  # Bad
+        json.dumps(
+            {"Person": ["Alice", "Bob"], "Location": ["Paris", "London"]}
+        ),  # Good
     ]
     llm = fake_llm_factory(responses)
     engine = CoreEngine(model=llm, schema=test_schema, max_retries=1)
 
     result = await engine.run(sample_text, mode="agentic")
 
-    result_dict = {token: tag for token, tag in result}
+    result_dict = dict(result)
     assert result_dict["London"] == "S-Location"
     assert "Zurich" not in result_dict
 
-async def test_engine_agentic_path_max_retries(fake_llm_factory, test_schema, sample_text):
+
+async def test_engine_agentic_path_max_retries(
+    fake_llm_factory, test_schema, sample_text
+):
     """Tests that the agentic path gives up after max retries."""
     bad_response = json.dumps({"Person": [], "Location": ["Zurich"]})
-    responses = [bad_response] * 4 # Initial call + 3 retries
+    responses = [bad_response] * 4  # Initial call + 3 retries
     llm = fake_llm_factory(responses)
     engine = CoreEngine(model=llm, schema=test_schema, max_retries=3)
 
@@ -72,6 +79,7 @@ async def test_engine_agentic_path_max_retries(fake_llm_factory, test_schema, sa
     # Should fail gracefully and return all 'O' tags
     for _, tag in result:
         assert tag == "O"
+
 
 async def test_engine_chunking_and_merging(fake_llm_factory, test_schema):
     """Tests the chunking and merging logic for long documents."""

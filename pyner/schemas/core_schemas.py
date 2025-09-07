@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
 from typing import List
+
+from pydantic import BaseModel, Field
+
 
 class BaseEntity(BaseModel):
     """
@@ -7,14 +9,16 @@ class BaseEntity(BaseModel):
 
     This is the intermediate format that the LLM is expected to produce.
     """
+
     type: str = Field(
         ...,
-        description="The category or type of the extracted entity (e.g., 'Disease', 'Symptom')."
+        description="The category or type of the extracted entity (e.g., 'Disease', 'Symptom').",
     )
     text: str = Field(
         ...,
-        description="The actual text span that was extracted from the source document."
+        description="The actual text span that was extracted from the source document.",
     )
+
 
 class Entities(BaseModel):
     """
@@ -22,7 +26,7 @@ class Entities(BaseModel):
 
     The LLM is expected to return a JSON object that conforms to this schema.
     """
+
     entities: List[BaseEntity] = Field(
-        ...,
-        description="A list of all entities extracted from the text."
+        ..., description="A list of all entities extracted from the text."
     )

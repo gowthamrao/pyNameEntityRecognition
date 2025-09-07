@@ -1,9 +1,11 @@
 import sys
+
 from loguru import logger
 
 # Configure the logger for the entire package
 # By setting it up here, any module that imports `logger` from this file
 # will get the same, pre-configured instance.
+
 
 def setup_logging(level="INFO", colorize=True):
     """
@@ -28,6 +30,7 @@ def setup_logging(level="INFO", colorize=True):
         ),
         colorize=colorize,
     )
+
 
 # Apply the default configuration when the module is imported.
 # This ensures logging is ready to use without explicit setup in other modules.

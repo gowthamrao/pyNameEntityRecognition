@@ -1,11 +1,14 @@
 import pytest
+
 from pyner.schemas.core_schemas import BaseEntity
 from pyner.utils.biores_converter import BIOSESConverter
+
 
 @pytest.fixture(scope="module")
 def converter():
     """Provides a BIOSESConverter instance for the tests."""
     return BIOSESConverter()
+
 
 def test_biores_converter_simple_case(converter):
     text = "Apple Inc. is a technology company."
@@ -16,8 +19,8 @@ def test_biores_converter_simple_case(converter):
     assert ("Apple", "B-ORG") in result
     assert ("Inc.", "E-ORG") in result
     # Find the token for 'is' and check it's 'O'
-    is_tag = [tag for token, tag in result if token == 'is']
-    assert is_tag == ['O']
+    is_tag = [tag for token, tag in result if token == "is"]
+    assert is_tag == ["O"]
 
 
 def test_biores_converter_single_token_entity(converter):
@@ -27,6 +30,7 @@ def test_biores_converter_single_token_entity(converter):
 
     assert ("Google", "S-ORG") in result
     assert ("like", "O") in result
+
 
 def test_biores_converter_multiple_entities(converter):
     text = "Apple and Google are rivals."
@@ -39,6 +43,7 @@ def test_biores_converter_multiple_entities(converter):
     assert ("Apple", "S-ORG") in result
     assert ("Google", "S-ORG") in result
     assert ("rivals", "O") in result
+
 
 def test_biores_converter_nested_entities(converter):
     """Tests that longer entities are prioritized over shorter, nested ones."""
@@ -55,6 +60,7 @@ def test_biores_converter_nested_entities(converter):
     # Ensure the shorter entity "New York" was not tagged as GPE
     assert not any(tag.endswith("-GPE") for _, tag in result)
 
+
 def test_biores_converter_no_entities(converter):
     text = "Just a simple sentence."
     entities = []
@@ -62,6 +68,7 @@ def test_biores_converter_no_entities(converter):
 
     for _, tag in result:
         assert tag == "O"
+
 
 def test_biores_converter_misaligned_span(converter):
     """Tests that spans not aligning with token boundaries are skipped."""
@@ -72,6 +79,7 @@ def test_biores_converter_misaligned_span(converter):
 
     for _, tag in result:
         assert tag == "O"
+
 
 def test_biores_converter_three_token_entity(converter):
     text = "I love New York City."
