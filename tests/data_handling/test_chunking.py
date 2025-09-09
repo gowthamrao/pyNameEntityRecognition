@@ -1,6 +1,6 @@
 import pytest
-from pyner.data_handling.chunking import chunk_text_with_offsets
-from pyner.observability.logging import logger
+from py_name_entity_recognition.data_handling.chunking import chunk_text_with_offsets
+from py_name_entity_recognition.observability.logging import logger
 
 
 def test_chunk_text_with_offsets():
@@ -25,7 +25,7 @@ def test_chunk_text_with_offsets_chunk_not_found(monkeypatch):
     text = "This is a test text."
     # Mock the splitter to return a chunk that is not in the original text
     monkeypatch.setattr(
-        "pyner.data_handling.chunking.RecursiveCharacterTextSplitter.split_text",
+        "py_name_entity_recognition.data_handling.chunking.RecursiveCharacterTextSplitter.split_text",
         lambda self, text: ["This is a test", "a completely different chunk"],
     )
 

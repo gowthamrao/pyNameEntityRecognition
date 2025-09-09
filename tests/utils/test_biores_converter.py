@@ -1,8 +1,8 @@
 import pytest
 import re
 
-from pyner.schemas.core_schemas import BaseEntity
-from pyner.utils.biores_converter import BIOSESConverter
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity
+from py_name_entity_recognition.utils.biores_converter import BIOSESConverter
 
 
 @pytest.fixture(scope="module")

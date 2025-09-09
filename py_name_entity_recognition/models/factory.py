@@ -6,7 +6,7 @@ from langchain_community.chat_models import ChatOllama
 from langchain_core.language_models import BaseLanguageModel
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
-from pyner.models.config import ModelConfig
+from py_name_entity_recognition.models.config import ModelConfig
 
 # Load environment variables from a .env file if it exists
 load_dotenv()

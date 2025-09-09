@@ -1,4 +1,4 @@
-# pyner/catalog.py
+# py_name_entity_recognition/catalog.py
 """
 A catalog of predefined NER schemas for scientific and biomedical text.
 

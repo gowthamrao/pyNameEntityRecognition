@@ -3,11 +3,11 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from pyner.models.config import ModelConfig
-from pyner.models.factory import ModelFactory
+from py_name_entity_recognition.models.config import ModelConfig
+from py_name_entity_recognition.models.factory import ModelFactory
 
 
-@patch("pyner.models.factory.ChatOpenAI")
+@patch("py_name_entity_recognition.models.factory.ChatOpenAI")
 def test_create_openai_model_with_extra_params(mock_chat_openai, mocker):
     """Tests creating a ChatOpenAI model with max_tokens and top_p."""
     mocker.patch.dict("os.environ", {"OPENAI_API_KEY": "test_key"})
@@ -20,7 +20,7 @@ def test_create_openai_model_with_extra_params(mock_chat_openai, mocker):
     )
 
 
-@patch("pyner.models.factory.ChatOpenAI")
+@patch("py_name_entity_recognition.models.factory.ChatOpenAI")
 def test_create_openai_model(mock_chat_openai, mocker):
     """Tests the creation of a ChatOpenAI model."""
     mocker.patch.dict("os.environ", {"OPENAI_API_KEY": "test_key"})
@@ -29,7 +29,7 @@ def test_create_openai_model(mock_chat_openai, mocker):
     mock_chat_openai.assert_called_once()
 
 
-@patch("pyner.models.factory.ChatAnthropic")
+@patch("py_name_entity_recognition.models.factory.ChatAnthropic")
 def test_create_anthropic_model(mock_chat_anthropic, mocker):
     """Tests the creation of a ChatAnthropic model."""
     mocker.patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test_key"})
@@ -38,7 +38,7 @@ def test_create_anthropic_model(mock_chat_anthropic, mocker):
     mock_chat_anthropic.assert_called_once()
 
 
-@patch("pyner.models.factory.ChatOllama")
+@patch("py_name_entity_recognition.models.factory.ChatOllama")
 def test_create_ollama_model(mock_chat_ollama):
     """Tests the creation of a ChatOllama model."""
     config = ModelConfig(provider="ollama", model_name="llama3")
@@ -46,7 +46,7 @@ def test_create_ollama_model(mock_chat_ollama):
     mock_chat_ollama.assert_called_once()
 
 
-@patch("pyner.models.factory.AzureChatOpenAI")
+@patch("py_name_entity_recognition.models.factory.AzureChatOpenAI")
 def test_create_azure_model(mock_azure_chat_openai, mocker):
     """Tests the creation of an AzureChatOpenAI model."""
     mocker.patch.dict(
@@ -63,7 +63,7 @@ def test_create_azure_model(mock_azure_chat_openai, mocker):
     mock_azure_chat_openai.assert_called_once()
 
 
-@patch("pyner.models.factory.AzureChatOpenAI")
+@patch("py_name_entity_recognition.models.factory.AzureChatOpenAI")
 def test_create_azure_model_with_extra_params(mock_azure_chat_openai, mocker):
     """Tests creating an AzureChatOpenAI model with max_tokens and top_p."""
     mocker.patch.dict("os.environ", {"AZURE_OPENAI_API_KEY": "test_key"})
@@ -84,7 +84,7 @@ def test_create_azure_model_with_extra_params(mock_azure_chat_openai, mocker):
     )
 
 
-@patch("pyner.models.factory.ChatAnthropic")
+@patch("py_name_entity_recognition.models.factory.ChatAnthropic")
 def test_create_anthropic_model_with_extra_params(mock_chat_anthropic, mocker):
     """Tests creating a ChatAnthropic model with max_tokens and top_p."""
     mocker.patch.dict("os.environ", {"ANTHROPIC_API_KEY": "test_key"})
@@ -97,7 +97,7 @@ def test_create_anthropic_model_with_extra_params(mock_chat_anthropic, mocker):
     )
 
 
-@patch("pyner.models.factory.ChatOllama")
+@patch("py_name_entity_recognition.models.factory.ChatOllama")
 def test_create_ollama_model_with_extra_params(mock_chat_ollama):
     """Tests creating a ChatOllama model with top_p."""
     config = ModelConfig(provider="ollama", model_name="llama3", top_p=0.95)
