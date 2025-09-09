@@ -1,8 +1,8 @@
 import pytest
 import re
 
-from pyner.data_handling.merging import ChunkMerger
-from pyner.schemas.core_schemas import BaseEntity
+from py_name_entity_recognition.data_handling.merging import ChunkMerger
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity
 
 
 @pytest.fixture

@@ -7,11 +7,11 @@ from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import END, StateGraph
 from pydantic import BaseModel
 
-from pyner.data_handling.chunking import chunk_text_with_offsets
-from pyner.data_handling.merging import ChunkMerger
-from pyner.prompting.prompt_manager import PromptManager, ZeroShotStructured
-from pyner.schemas.core_schemas import BaseEntity
-from pyner.utils.biores_converter import BIOSESConverter
+from py_name_entity_recognition.data_handling.chunking import chunk_text_with_offsets
+from py_name_entity_recognition.data_handling.merging import ChunkMerger
+from py_name_entity_recognition.prompting.prompt_manager import PromptManager, ZeroShotStructured
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity
+from py_name_entity_recognition.utils.biores_converter import BIOSESConverter
 
 
 class AgenticGraphState(TypedDict, total=False):

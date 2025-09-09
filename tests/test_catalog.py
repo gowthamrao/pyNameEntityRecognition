@@ -1,6 +1,6 @@
 import pytest
 from pydantic import BaseModel
-from pyner import catalog
+from py_name_entity_recognition import catalog
 
 def test_get_schema_with_preset():
     """Test that a valid preset returns a schema with the correct entities."""

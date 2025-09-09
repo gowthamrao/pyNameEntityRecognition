@@ -27,8 +27,8 @@ Here’s how you would use the `extract_entities` function with a preset. Notice
 
 ```python
 import asyncio
-from pyner import extract_entities
-from pyner.observability.visualization import display_biores
+from py_name_entity_recognition import extract_entities
+from py_name_entity_recognition.observability.visualization import display_biores
 
 # Example text from a clinical trial abstract
 text = """In this randomized controlled trial (RCT), patients with hypertension receiving Metformin
@@ -82,7 +82,7 @@ You can create a schema by picking broad categories. For example, if you're inte
 
 ```python
 import asyncio
-from pyner import extract_entities
+from py_name_entity_recognition import extract_entities
 
 text = """In this randomized controlled trial (RCT), patients with hypertension receiving Metformin
 were monitored for adverse events, including nausea and vomiting. The study was conducted in Phase III."""
@@ -169,8 +169,8 @@ To help you build your custom schemas, here is the full list of available entity
 For ultimate flexibility, you can even add your own entity definitions to the catalog at runtime using the `register_entity` function. This is useful if you have a very specific, custom entity type that you want to reuse across different schemas.
 
 ```python
-from pyner.catalog import register_entity, get_schema
-from pyner import extract_entities
+from py_name_entity_recognition.catalog import register_entity, get_schema
+from py_name_entity_recognition import extract_entities
 
 # Define a new entity
 register_entity(
@@ -204,7 +204,7 @@ Want the high accuracy of the `agentic` mode while using a custom schema built f
 
 ```python
 import asyncio
-from pyner import extract_entities
+from py_name_entity_recognition import extract_entities
 
 text = """In this randomized controlled trial (RCT), patients with hypertension receiving Metformin
 were monitored for adverse events, including nausea and vomiting. The study was conducted in Phase III."""

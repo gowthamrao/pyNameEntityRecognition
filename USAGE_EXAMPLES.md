@@ -9,7 +9,7 @@ First, import the necessary components and initialize the main extraction functi
 ```python
 # main_example.py
 import asyncio
-from pyner import extract_entities
+from py_name_entity_recognition import extract_entities
 from pydantic import BaseModel, Field
 from typing import List
 

@@ -2,7 +2,7 @@ from typing import List, Tuple
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from pyner.observability.logging import logger
+from py_name_entity_recognition.observability.logging import logger
 
 
 def chunk_text_with_offsets(

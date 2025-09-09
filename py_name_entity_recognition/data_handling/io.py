@@ -7,11 +7,11 @@ import pandas as pd
 from datasets import Dataset
 from pydantic import BaseModel
 
-from pyner.catalog import get_schema
-from pyner.core.engine import CoreEngine
-from pyner.models.config import ModelConfig
-from pyner.models.factory import ModelFactory
-from pyner.schemas.core_schemas import BaseEntity, Entities
+from py_name_entity_recognition.catalog import get_schema
+from py_name_entity_recognition.core.engine import CoreEngine
+from py_name_entity_recognition.models.config import ModelConfig
+from py_name_entity_recognition.models.factory import ModelFactory
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity, Entities
 
 # Configure logging
 logger = logging.getLogger(__name__)

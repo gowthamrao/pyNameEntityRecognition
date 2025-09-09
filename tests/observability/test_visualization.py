@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from pyner.observability.visualization import (
+from py_name_entity_recognition.observability.visualization import (
     _get_color,
     display_biores,
     render_biores_html,

@@ -6,13 +6,13 @@ import pytest
 from datasets import Dataset
 from pydantic import BaseModel, Field
 
-from pyner.data_handling.io import (
+from py_name_entity_recognition.data_handling.io import (
     _resolve_schema,
     _yield_texts,
     biores_to_entities,
     extract_entities,
 )
-from pyner.schemas.core_schemas import BaseEntity, Entities
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity, Entities
 
 
 class Person(BaseEntity):
@@ -109,8 +109,8 @@ async def test_yield_texts():
 
 
 @pytest.mark.asyncio
-@patch("pyner.data_handling.io.CoreEngine")
-@patch("pyner.data_handling.io.ModelFactory")
+@patch("py_name_entity_recognition.data_handling.io.CoreEngine")
+@patch("py_name_entity_recognition.data_handling.io.ModelFactory")
 async def test_extract_entities(mock_factory, mock_engine):
     mock_engine_instance = mock_engine.return_value
     mock_engine_instance.run = AsyncMock(return_value=[("John", "S-PERSON")])
@@ -134,8 +134,8 @@ async def test_extract_entities(mock_factory, mock_engine):
 
 
 @pytest.mark.asyncio
-@patch("pyner.data_handling.io.CoreEngine")
-@patch("pyner.data_handling.io.ModelFactory")
+@patch("py_name_entity_recognition.data_handling.io.CoreEngine")
+@patch("py_name_entity_recognition.data_handling.io.ModelFactory")
 async def test_extract_entities_with_model_config_dict(mock_factory, mock_engine):
     mock_engine_instance = mock_engine.return_value
     mock_engine_instance.run = AsyncMock(return_value=[("John", "S-PERSON")])

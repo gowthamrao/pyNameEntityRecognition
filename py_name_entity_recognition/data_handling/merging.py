@@ -1,8 +1,8 @@
 import re
 from typing import List, Tuple
 
-from pyner.schemas.core_schemas import BaseEntity
-from pyner.utils.biores_converter import BIOSESConverter
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity
+from py_name_entity_recognition.utils.biores_converter import BIOSESConverter
 
 
 class ChunkMerger:

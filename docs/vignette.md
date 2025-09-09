@@ -59,7 +59,7 @@ Now, let's import the main `extract_entities` function and run it on our text.
 
 ```python
 import asyncio
-from pyner import extract_entities
+from py_name_entity_recognition import extract_entities
 
 # The text we want to process
 text = "John Doe, a software engineer at Google, lives in New York. He is meeting with Jane Smith from Microsoft tomorrow."
@@ -97,7 +97,7 @@ Here’s what the output for our example looks like:
 For a more human-readable view, especially in environments like Jupyter notebooks, you can use the built-in `display_biores` utility.
 
 ```python
-from pyner.observability.visualization import display_biores
+from py_name_entity_recognition.observability.visualization import display_biores
 
 # Assuming conll_output from the previous step
 display_biores(conll_output)
@@ -141,7 +141,7 @@ The output will be a dictionary that mirrors your Pydantic schema:
 The default model is OpenAI's `gpt-3.5-turbo`. You can easily switch to another provider, like Anthropic's Claude, by passing a `model_config`.
 
 ```python
-from pyner.models.config import ModelConfig
+from py_name_entity_recognition.models.config import ModelConfig
 
 # Define the model configuration
 claude_config = ModelConfig(
@@ -204,8 +204,8 @@ What if your text is longer than the LLM's context window? `pyNameEntityRecognit
 For most cases, you don't need to do anything. If you need more control, you can instantiate the `CoreEngine` directly to adjust the chunking parameters.
 
 ```python
-from pyner.core.engine import CoreEngine
-from pyner.models.factory import ModelFactory
+from py_name_entity_recognition.core.engine import CoreEngine
+from py_name_entity_recognition.models.factory import ModelFactory
 
 # For very long text...
 long_text = "..." * 5000
