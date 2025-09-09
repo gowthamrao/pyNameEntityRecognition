@@ -89,7 +89,7 @@ async def test_extract_entities(mock_factory, mock_engine):
     assert results[0] == [("John", "S-PERSON")]
 
     # Test with invalid schema
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         await extract_entities("test", "not a schema")
 
     # Test with invalid output format

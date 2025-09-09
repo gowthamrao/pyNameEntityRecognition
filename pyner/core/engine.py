@@ -84,9 +84,12 @@ class CoreEngine:
 
     async def _run_lcel_chain(self, text_input: str) -> BaseModel:
         prompt_template = self.prompt_manager.get_prompt_template(self.schema)
-        structured_llm = self.model.with_structured_output(self.schema)
+        structured_llm = self.model.with_structured_output(
+            self.schema.model_json_schema()
+        )
         chain = prompt_template | structured_llm
-        return await chain.ainvoke({"text_input": text_input})
+        result = await chain.ainvoke({"text_input": text_input})
+        return self.schema.model_validate(result)
 
     def _build_agentic_graph(self) -> StateGraph:
         graph = StateGraph(AgenticGraphState)
@@ -153,8 +156,9 @@ class CoreEngine:
         )
         chain = prompt.partial(
             previous_output=previous_output_str, errors=error_str
-        ) | self.model.with_structured_output(state["extraction_schema"])
-        new_llm_output = await chain.ainvoke({"text_input": text_input})
+        ) | self.model.with_structured_output(state["extraction_schema"].model_json_schema())
+        result = await chain.ainvoke({"text_input": text_input})
+        new_llm_output = state["extraction_schema"].model_validate(result)
         return {"llm_output": new_llm_output, "retry_count": state["retry_count"] + 1}
 
     def _decide_to_refine_or_end(self, state: AgenticGraphState) -> str:

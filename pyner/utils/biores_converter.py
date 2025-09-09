@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import spacy
 from spacy.language import Language
@@ -17,7 +17,7 @@ class BIOSESConverter:
     the appropriate BIOSES (Beginning, Inside, Outside, Single, End) tag.
     """
 
-    def __init__(self, nlp: Language = None):
+    def __init__(self, nlp: Optional[Language] = None):
         """
         Initializes the converter with a spaCy Language object.
 

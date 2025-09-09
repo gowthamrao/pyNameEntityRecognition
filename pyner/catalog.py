@@ -9,7 +9,7 @@ to dynamically generate Pydantic models for extraction.
 """
 
 import logging
-from typing import Dict, List, Optional, Set, Type, TypedDict
+from typing import Any, Dict, List, Optional, Set, Type, TypedDict
 
 from pydantic import BaseModel, Field, create_model
 
@@ -557,7 +557,7 @@ def _generate_pydantic_model(
     Returns:
         A new Pydantic BaseModel class with the specified fields.
     """
-    fields = {}
+    fields: Dict[str, Any] = {}
     for key in sorted(entity_keys):  # Sort for consistent model definition
         if key in ENTITY_REGISTRY:
             entity_def = ENTITY_REGISTRY[key]

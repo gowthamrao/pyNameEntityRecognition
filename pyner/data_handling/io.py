@@ -205,8 +205,9 @@ async def extract_entities(
         texts_to_process.append(text)
 
     tasks = [engine.run(text, mode=mode) for text in texts_to_process]
-    conll_results = await asyncio.gather(*tasks)
+    conll_results: List[List[Tuple[str, str]]] = await asyncio.gather(*tasks)
 
+    output_results: Union[List[Dict[str, Any]], List[List[Tuple[str, str]]]]
     if output_format == "json":
         output_results = [biores_to_entities(r).model_dump() for r in conll_results]
     elif output_format == "conll":
