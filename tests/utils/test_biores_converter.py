@@ -1,4 +1,5 @@
 import pytest
+import re
 
 from pyner.schemas.core_schemas import BaseEntity
 from pyner.utils.biores_converter import BIOSESConverter
@@ -89,3 +90,27 @@ def test_biores_converter_three_token_entity(converter):
     assert ("New", "B-GPE") in result
     assert ("York", "I-GPE") in result
     assert ("City", "E-GPE") in result
+
+
+def test_biores_converter_spacy_model_not_found(monkeypatch):
+    """Tests that an IOError is raised if the spaCy model is not found."""
+    monkeypatch.setattr("spacy.load", lambda name: (_ for _ in ()).throw(OSError))
+    with pytest.raises(OSError, match="Default spaCy model not found"):
+        BIOSESConverter()
+
+
+def test_biores_converter_invalid_regex(converter, monkeypatch):
+    """Tests that an invalid regex in an entity text is handled gracefully."""
+    text = "He said (hello."
+    entities = [BaseEntity(type="GREETING", text="(")]
+
+    def mock_finditer(*args, **kwargs):
+        raise re.error("test error")
+
+    monkeypatch.setattr("re.finditer", mock_finditer)
+
+    result = converter.convert(text, entities)
+
+    # The invalid regex should be skipped, and all tags should be 'O'
+    for _, tag in result:
+        assert tag == "O"
