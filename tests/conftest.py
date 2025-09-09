@@ -1,9 +1,9 @@
+import json
 from typing import Any, List, Type
 
 import pytest
 from langchain_core.language_models.fake import FakeListLLM
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.runnables import Runnable
+from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel, Field
 
 
@@ -23,15 +23,14 @@ class FakeStructuredLLM(FakeListLLM):
     the structured output method to parse that string into a Pydantic model.
     """
 
-    def with_structured_output(
-        self, schema: Type[BaseModel], **kwargs: Any
-    ) -> Runnable:
+    def with_structured_output(self, schema: dict, **kwargs: Any) -> Runnable:
         """
-        Overrides the base method to return a chain that parses the fake response.
+        Overrides the base method to return a chain that simulates parsing the
+        fake LLM's JSON string response into a dictionary.
         """
-        parser = PydanticOutputParser(pydantic_object=schema)
-        # Return a new chain: the fake LLM's response -> parser
-        return self | parser
+        # The schema is now a dict. The FakeListLLM returns a JSON string,
+        # so we just need to parse it into a dict to simulate the real behavior.
+        return self | RunnableLambda(json.loads)
 
 
 @pytest.fixture(scope="session")

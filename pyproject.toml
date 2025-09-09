@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "LLM-based Named Entity Recognition using LangChain and LangGraph"
 authors = ["Gowtham Rao <rao@ohdsi.org>"]
 license = "Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/GowthamRao/pyner"
+repository = "https://github.com/GowthamRao/pyner"
+keywords = ["ner", "named entity recognition", "llm", "langchain", "langgraph", "nlp"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
