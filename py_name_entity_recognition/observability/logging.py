@@ -38,5 +38,5 @@ setup_logging()
 
 # The configured logger is now ready to be imported by other modules.
 # Example usage in other files:
-# from pyner.observability.logging import logger
+# from py_name_entity_recognition.observability.logging import logger
 # logger.info("This is a configured log message.")

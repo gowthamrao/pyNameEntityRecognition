@@ -1,15 +1,18 @@
+import logging
 from unittest.mock import AsyncMock, patch
 
 import pandas as pd
 import pytest
 from datasets import Dataset
+from pydantic import BaseModel, Field
 
-from pyner.data_handling.io import (
+from py_name_entity_recognition.data_handling.io import (
+    _resolve_schema,
     _yield_texts,
     biores_to_entities,
     extract_entities,
 )
-from pyner.schemas.core_schemas import BaseEntity, Entities
+from py_name_entity_recognition.schemas.core_schemas import BaseEntity, Entities
 
 
 class Person(BaseEntity):
@@ -18,6 +21,26 @@ class Person(BaseEntity):
 
 class Location(BaseEntity):
     pass
+
+
+class MySchema(BaseModel):
+    name: str = Field(...)
+
+
+def test_resolve_schema_invalid_key(caplog):
+    with caplog.at_level(logging.WARNING):
+        _resolve_schema({"preset": "CLINICAL_TRIAL_CORE", "invalid_key": "value"})
+    assert "Invalid keys found and ignored" in caplog.text
+
+
+def test_resolve_schema_empty_config():
+    with pytest.raises(ValueError, match="Invalid or empty configuration"):
+        _resolve_schema({})
+
+
+def test_resolve_schema_invalid_type():
+    with pytest.raises(TypeError, match="Invalid schema input type"):
+        _resolve_schema(123)
 
 
 @pytest.mark.parametrize(
@@ -41,6 +64,15 @@ class Location(BaseEntity):
             Entities(entities=[BaseEntity(type="LOCATION", text="San Francisco Bay")]),
         ),
         ([], Entities(entities=[])),
+        (
+            [("New", "B-LOCATION"), ("York", "B-LOCATION")],
+            Entities(
+                entities=[
+                    BaseEntity(type="LOCATION", text="New"),
+                    BaseEntity(type="LOCATION", text="York"),
+                ]
+            ),
+        ),
     ],
 )
 def test_biores_to_entities(tagged_tokens, expected_entities):
@@ -67,14 +99,18 @@ async def test_yield_texts():
     with pytest.raises(TypeError):
         [x async for x in _yield_texts(123, None)]
 
-    # Test missing text_column
-    with pytest.raises(ValueError):
+    # Test missing text_column for DataFrame
+    with pytest.raises(ValueError, match="`text_column` must be specified"):
         [x async for x in _yield_texts(df, None)]
+
+    # Test missing text_column for Dataset
+    with pytest.raises(ValueError, match="`text_column` must be specified"):
+        [x async for x in _yield_texts(ds, None)]
 
 
 @pytest.mark.asyncio
-@patch("pyner.data_handling.io.CoreEngine")
-@patch("pyner.data_handling.io.ModelFactory")
+@patch("py_name_entity_recognition.data_handling.io.CoreEngine")
+@patch("py_name_entity_recognition.data_handling.io.ModelFactory")
 async def test_extract_entities(mock_factory, mock_engine):
     mock_engine_instance = mock_engine.return_value
     mock_engine_instance.run = AsyncMock(return_value=[("John", "S-PERSON")])
@@ -95,3 +131,22 @@ async def test_extract_entities(mock_factory, mock_engine):
     # Test with invalid output format
     with pytest.raises(ValueError):
         await extract_entities("test", Person, output_format="invalid")
+
+
+@pytest.mark.asyncio
+@patch("py_name_entity_recognition.data_handling.io.CoreEngine")
+@patch("py_name_entity_recognition.data_handling.io.ModelFactory")
+async def test_extract_entities_with_model_config_dict(mock_factory, mock_engine):
+    mock_engine_instance = mock_engine.return_value
+    mock_engine_instance.run = AsyncMock(return_value=[("John", "S-PERSON")])
+
+    await extract_entities(
+        "John", Person, model_config={"provider": "openai", "name": "gpt-4"}
+    )
+    mock_factory.create.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_extract_entities_with_empty_list():
+    result = await extract_entities([], Person)
+    assert result == []

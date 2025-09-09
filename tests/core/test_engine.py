@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from pyner.core.engine import CoreEngine
+from py_name_entity_recognition.core.engine import CoreEngine
 
 pytestmark = pytest.mark.asyncio
 

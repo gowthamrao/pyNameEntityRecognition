@@ -69,9 +69,9 @@ from pydantic import BaseModel, Field
 from typing import List
 
 # Import the main extraction function
-from pyner import extract_entities
+from py_name_entity_recognition import extract_entities
 # Import the visualization utility
-from pyner.observability.visualization import display_biores
+from py_name_entity_recognition.observability.visualization import display_biores
 
 # 1. Define your extraction schema using Pydantic
 class UserInfo(BaseModel):

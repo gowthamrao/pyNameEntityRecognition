@@ -3,7 +3,7 @@ from typing import List
 import pytest
 from pydantic import BaseModel, Field
 
-from pyner.prompting.prompt_manager import PromptManager, ZeroShotStructured
+from py_name_entity_recognition.prompting.prompt_manager import PromptManager, ZeroShotStructured
 
 
 class SampleSchema(BaseModel):
