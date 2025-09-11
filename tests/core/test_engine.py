@@ -81,6 +81,25 @@ async def test_engine_agentic_path_max_retries(
         assert tag == "O"
 
 
+async def test_engine_agentic_self_correction(
+    fake_llm_factory, test_schema, sample_text
+):
+    """Tests that the agentic mode self-corrects a hallucinated entity."""
+    responses = [
+        json.dumps({"Person": ["Alice", "Zurich"], "Location": ["Paris"]}),  # Hallucinated
+        json.dumps({"Person": ["Alice"], "Location": ["Paris"]}),  # Corrected
+    ]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=test_schema, max_retries=1)
+
+    result = await engine.run(sample_text, mode="agentic")
+
+    result_dict = dict(result)
+    assert "Zurich" not in result_dict
+    assert result_dict["Alice"] == "S-Person"
+    assert result_dict["Paris"] == "S-Location"
+
+
 async def test_engine_chunking_and_merging(fake_llm_factory, test_schema):
     """Tests the chunking and merging logic for long documents."""
     long_text = "Alice is a doctor in New York. " * 50
@@ -101,3 +120,30 @@ async def test_engine_chunking_and_merging(fake_llm_factory, test_schema):
     assert found_alice
     assert found_ny
     assert not found_old_york
+
+
+async def test_engine_lcel_path_malformed_json(
+    fake_llm_factory, test_schema, sample_text
+):
+    """Tests that the LCEL path raises a validation error for malformed JSON."""
+    responses = ['{"Person": ["Alice"], "Location": "Paris"}']  # Malformed
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=test_schema)
+
+    # Pydantic v2 raises a ValidationError
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
+        await engine.run(sample_text, mode="lcel")
+
+
+async def test_engine_no_entities_found(fake_llm_factory, test_schema, sample_text):
+    """Tests the engine's behavior when no entities are found."""
+    responses = [json.dumps({"Person": [], "Location": []})]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=test_schema)
+
+    result = await engine.run(sample_text, mode="lcel")
+
+    for _, tag in result:
+        assert tag == "O"

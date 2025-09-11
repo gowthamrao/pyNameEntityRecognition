@@ -114,3 +114,43 @@ def test_biores_converter_invalid_regex(converter, monkeypatch):
     # The invalid regex should be skipped, and all tags should be 'O'
     for _, tag in result:
         assert tag == "O"
+
+
+def test_biores_converter_overlapping_entities_same_length(converter):
+    """Tests that the first of two overlapping entities of the same length is prioritized."""
+    text = "He works at the University of New York."
+    entities = [
+        BaseEntity(type="ORG", text="University of New"),
+        BaseEntity(type="GPE", text="of New York"),
+    ]
+    result = converter.convert(text, entities)
+
+    assert ("University", "B-ORG") in result
+    assert ("of", "I-ORG") in result
+    assert ("New", "E-ORG") in result
+    assert ("York", "O") in result  # Should not be part of the GPE
+    assert not any(tag.endswith("-GPE") for _, tag in result)
+
+
+def test_biores_converter_special_characters(converter):
+    """Tests entities with special characters."""
+    text = "The C.I.A. is a U.S. agency. He is the C.E.O."
+    entities = [
+        BaseEntity(type="ORG", text="C.I.A."),
+        BaseEntity(type="TITLE", text="C.E.O."),
+    ]
+    result = converter.convert(text, entities)
+
+    assert ("C.I.A.", "S-ORG") in result
+    assert ("C.E.O.", "S-TITLE") in result
+
+
+def test_biores_converter_case_sensitivity(converter):
+    """Tests that entity matching is case-sensitive."""
+    text = "I like apple."
+    entities = [BaseEntity(type="FRUIT", text="Apple")]
+    result = converter.convert(text, entities)
+
+    # Since matching is case-sensitive, "Apple" should not be found in "I like apple."
+    for _, tag in result:
+        assert tag == "O"
