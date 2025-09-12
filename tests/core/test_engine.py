@@ -124,6 +124,41 @@ async def test_engine_chunking_and_merging(fake_llm_factory, test_schema):
     assert not found_old_york
 
 
+async def test_engine_merging_overlapping_entities(fake_llm_factory, test_schema):
+    """Tests that the merger correctly de-duplicates entities found in overlapping chunks."""
+    text = (
+        "Part one of the text is here. In the middle is Dr. Alice Smith. "
+        "The final part of the text is over here."
+    )
+    # This text is set up so "Dr. Alice Smith" is fully contained in the overlap
+    # of multiple chunks.
+
+    # Mock LLM to return the entity for the chunks that contain it
+    responses = [
+        json.dumps({"Person": [], "Location": []}),
+        json.dumps({"Person": ["Dr. Alice Smith"], "Location": []}),
+        json.dumps({"Person": ["Dr. Alice Smith"], "Location": []}),
+    ]
+    llm = fake_llm_factory(responses)
+    # Use chunk settings that cause "Dr. Alice Smith" to be in multiple chunks
+    engine = CoreEngine(
+        model=llm, schema=test_schema, chunk_size=60, chunk_overlap=40
+    )
+
+    result = await engine.run(text, mode="lcel")
+
+    result_dict = dict(result)
+
+    # Check that "Dr. Alice Smith" is correctly identified as one entity
+    assert result_dict.get("Dr.") == "B-Person"
+    assert result_dict.get("Alice") == "I-Person"
+    assert result_dict.get("Smith") == "E-Person"
+
+    # Count the number of "B-" tags to ensure the entity was not duplicated
+    b_tag_count = sum(1 for _, tag in result if tag.startswith("B-"))
+    assert b_tag_count == 1
+
+
 async def test_engine_lcel_path_malformed_json(
     fake_llm_factory, test_schema, sample_text
 ):
@@ -149,3 +184,62 @@ async def test_engine_no_entities_found(fake_llm_factory, test_schema, sample_te
 
     for _, tag in result:
         assert tag == "O"
+
+
+async def test_engine_agentic_path_case_sensitive_validation(
+    fake_llm_factory, test_schema, sample_text
+):
+    """Tests that the validation is case-sensitive."""
+    # LLM returns "london" (lowercase) which is not in the original text
+    responses = [
+        json.dumps({"Person": ["Alice"], "Location": ["london"]}),  # Bad casing
+        json.dumps({"Person": ["Alice"], "Location": ["London"]}),  # Corrected
+    ]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=test_schema, max_retries=1)
+
+    result = await engine.run(sample_text, mode="agentic")
+
+    result_dict = dict(result)
+    assert "london" not in result_dict
+    assert result_dict["London"] == "S-Location"
+
+
+async def test_engine_empty_input(fake_llm_factory, test_schema):
+    """Tests that the engine handles empty string input gracefully."""
+    llm = fake_llm_factory([])
+    engine = CoreEngine(model=llm, schema=test_schema)
+
+    result = await engine.run("", mode="lcel")
+    assert result == []
+
+
+async def test_engine_whitespace_input(fake_llm_factory, test_schema):
+    """Tests that the engine handles whitespace-only input gracefully."""
+    llm = fake_llm_factory([])
+    engine = CoreEngine(model=llm, schema=test_schema)
+
+    result = await engine.run("   \t\n  ", mode="lcel")
+    assert result == []
+
+
+async def test_engine_handles_none_in_entity_list(
+    fake_llm_factory, test_schema, sample_text
+):
+    """Tests that the engine handles None values in the entity list gracefully."""
+    # The Pydantic model might allow for List[Optional[str]]
+    responses = [
+        json.dumps(
+            {"Person": ["Alice", None, "Bob"], "Location": ["Paris", "London"]}
+        )
+    ]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=test_schema)
+
+    result = await engine.run(sample_text, mode="lcel")
+
+    # It should process the valid entities and ignore the None
+    result_dict = dict(result)
+    assert result_dict["Alice"] == "S-Person"
+    assert result_dict["Bob"] == "S-Person"
+    assert "None" not in result_dict
