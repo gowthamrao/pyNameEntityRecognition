@@ -86,7 +86,9 @@ async def test_engine_agentic_self_correction(
 ):
     """Tests that the agentic mode self-corrects a hallucinated entity."""
     responses = [
-        json.dumps({"Person": ["Alice", "Zurich"], "Location": ["Paris"]}),  # Hallucinated
+        json.dumps(
+            {"Person": ["Alice", "Zurich"], "Location": ["Paris"]}
+        ),  # Hallucinated
         json.dumps({"Person": ["Alice"], "Location": ["Paris"]}),  # Corrected
     ]
     llm = fake_llm_factory(responses)

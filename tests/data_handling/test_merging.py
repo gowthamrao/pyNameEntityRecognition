@@ -1,5 +1,6 @@
-import pytest
 import re
+
+import pytest
 
 from py_name_entity_recognition.data_handling.merging import ChunkMerger
 from py_name_entity_recognition.schemas.core_schemas import BaseEntity
