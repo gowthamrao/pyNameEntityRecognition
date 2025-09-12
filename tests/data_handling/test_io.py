@@ -147,6 +147,8 @@ async def test_extract_entities_with_model_config_dict(mock_factory, mock_engine
 
 
 @pytest.mark.asyncio
-async def test_extract_entities_with_empty_list():
+@patch("py_name_entity_recognition.data_handling.io.CoreEngine")
+@patch("py_name_entity_recognition.data_handling.io.ModelFactory")
+async def test_extract_entities_with_empty_list(mock_factory, mock_engine):
     result = await extract_entities([], Person)
     assert result == []
