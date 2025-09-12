@@ -41,75 +41,54 @@ class BIOSESConverter:
                 )
                 raise OSError("Default spaCy model not found.") from e
 
-    def convert(self, text: str, entities: List[BaseEntity]) -> List[Tuple[str, str]]:
+    def convert(
+        self, text: str, entities_with_spans: List[Tuple[int, int, str]]
+    ) -> List[Tuple[str, str]]:
         """
-        Converts a list of structured entities into BIOSES-tagged tokens.
-
-        The method handles nested entities by prioritizing longer spans and ensures
-        that entity spans align perfectly with token boundaries.
+        Converts a list of entities with character spans into BIOSES-tagged tokens.
 
         Args:
-            text: The original source text from which entities were extracted.
-            entities: A list of BaseEntity objects representing the extracted spans.
+            text: The original source text.
+            entities_with_spans: A list of tuples, where each tuple contains
+                                 (start_char, end_char, entity_type).
 
         Returns:
-            A list of (token, tag) tuples, representing the tokenized text with
-            BIOSES tags. For example: [('John', 'S-PERSON'), ('Doe', 'S-PERSON')].
+            A list of (token, tag) tuples.
         """
         doc = self.nlp(text)
         tags = ["O"] * len(doc)
 
-        # Handle cases where no entities are provided.
-        if not entities:
+        if not entities_with_spans:
             return list(zip([token.text for token in doc], tags))
 
-        # Sort entities by length (descending) to handle nested cases correctly.
-        # Larger spans (e.g., "New York City") are processed before smaller,
-        # nested ones (e.g., "New York").
-        sorted_entities = sorted(entities, key=lambda e: len(e.text), reverse=True)
+        # Sort by span length (descending) to handle nested entities correctly.
+        sorted_entities = sorted(
+            entities_with_spans, key=lambda e: e[1] - e[0], reverse=True
+        )
 
-        for entity in sorted_entities:
-            try:
-                # Escape special regex characters in the entity text to ensure literal matching.
-                pattern = re.escape(entity.text)
-                for match in re.finditer(pattern, text):
-                    start_char, end_char = match.span()
+        for start_char, end_char, entity_type in sorted_entities:
+            span = doc.char_span(start_char, end_char, label=entity_type)
 
-                    # Use spaCy's `doc.char_span` for precise, token-aligned spans.
-                    # This is crucial for ensuring the extracted text corresponds to
-                    # a valid token sequence.
-                    span = doc.char_span(start_char, end_char, label=entity.type)
-
-                    if span is None:
-                        logger.warning(
-                            f"Entity span '{entity.text}' at chars ({start_char}-{end_char}) "
-                            "does not align with token boundaries. Skipping this occurrence."
-                        )
-                        continue
-
-                    # Check if any token in the span has already been tagged.
-                    # Since we sorted by length, this prevents shorter, nested entities
-                    # from overwriting the tags of longer, containing entities.
-                    if any(tags[i] != "O" for i in range(span.start, span.end)):
-                        logger.debug(
-                            f"Skipping entity '{entity.text}' due to token overlap with an "
-                            "already-tagged (and longer) entity."
-                        )
-                        continue
-
-                    # Apply the BIOSES tags based on the number of tokens in the span.
-                    if len(span) == 1:
-                        tags[span.start] = f"S-{entity.type}"
-                    else:
-                        tags[span.start] = f"B-{entity.type}"
-                        for i in range(span.start + 1, span.end - 1):
-                            tags[i] = f"I-{entity.type}"
-                        tags[span.end - 1] = f"E-{entity.type}"
-
-            except re.error as e:
+            if span is None:
+                entity_text = text[start_char:end_char]
                 logger.warning(
-                    f"Could not compile regex for entity text: '{entity.text}'. Error: {e}"
+                    f"Entity span '{entity_text}' at chars ({start_char}-{end_char}) "
+                    "does not align with token boundaries. Skipping this occurrence."
                 )
                 continue
+
+            if any(tags[i] != "O" for i in range(span.start, span.end)):
+                logger.debug(
+                    f"Skipping entity span at ({start_char}-{end_char}) due to token overlap."
+                )
+                continue
+
+            if len(span) == 1:
+                tags[span.start] = f"S-{entity_type}"
+            else:
+                tags[span.start] = f"B-{entity_type}"
+                for i in range(span.start + 1, span.end - 1):
+                    tags[i] = f"I-{entity_type}"
+                tags[span.end - 1] = f"E-{entity_type}"
 
         return list(zip([token.text for token in doc], tags))

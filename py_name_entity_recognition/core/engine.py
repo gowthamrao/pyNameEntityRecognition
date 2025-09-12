@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 from typing import List, Optional, Tuple, Type, TypedDict
 
 from langchain_core.language_models import BaseLanguageModel
@@ -52,7 +53,16 @@ class CoreEngine:
 
         if len(text) <= self.chunk_size:
             entities = await self._get_intermediate_entities(text, mode)
-            return self.biores_converter.convert(text, entities)
+            # For the non-chunking path, we need to find the spans ourselves.
+            spans = []
+            for entity in entities:
+                try:
+                    pattern = re.escape(entity.text)
+                    for match in re.finditer(pattern, text):
+                        spans.append((match.start(), match.end(), entity.type))
+                except re.error:
+                    continue  # Ignore entities that form invalid regex
+            return self.biores_converter.convert(text, spans)
 
         chunks_with_offsets = chunk_text_with_offsets(
             text, self.chunk_size, self.chunk_overlap
