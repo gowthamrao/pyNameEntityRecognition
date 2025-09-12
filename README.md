@@ -36,6 +36,8 @@ This project uses [Poetry](https://python-poetry.org/) for dependency management
     poetry run python -m spacy download en_core_web_sm
     ```
 
+    **Note:** If you use a python version manager like `pyenv` and switch to a new python version, you will need to run this command again to download the model for the new environment.
+
 ## Configuration
 
 ### LLM API Keys
