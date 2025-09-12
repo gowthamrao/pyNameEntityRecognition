@@ -1,4 +1,3 @@
-import pytest
 from py_name_entity_recognition.data_handling.chunking import chunk_text_with_offsets
 from py_name_entity_recognition.observability.logging import logger
 

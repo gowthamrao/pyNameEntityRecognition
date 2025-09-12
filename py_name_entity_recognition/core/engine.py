@@ -9,7 +9,10 @@ from pydantic import BaseModel
 
 from py_name_entity_recognition.data_handling.chunking import chunk_text_with_offsets
 from py_name_entity_recognition.data_handling.merging import ChunkMerger
-from py_name_entity_recognition.prompting.prompt_manager import PromptManager, ZeroShotStructured
+from py_name_entity_recognition.prompting.prompt_manager import (
+    PromptManager,
+    ZeroShotStructured,
+)
 from py_name_entity_recognition.schemas.core_schemas import BaseEntity
 from py_name_entity_recognition.utils.biores_converter import BIOSESConverter
 
@@ -156,7 +159,9 @@ class CoreEngine:
         )
         chain = prompt.partial(
             previous_output=previous_output_str, errors=error_str
-        ) | self.model.with_structured_output(state["extraction_schema"].model_json_schema())
+        ) | self.model.with_structured_output(
+            state["extraction_schema"].model_json_schema()
+        )
         result = await chain.ainvoke({"text_input": text_input})
         new_llm_output = state["extraction_schema"].model_validate(result)
         return {"llm_output": new_llm_output, "retry_count": state["retry_count"] + 1}
