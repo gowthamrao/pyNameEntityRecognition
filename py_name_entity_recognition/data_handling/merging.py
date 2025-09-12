@@ -79,7 +79,6 @@ class ChunkMerger:
                                 entity_global_start,
                                 entity_global_start + len(entity.text),
                                 entity.type,
-                                entity.text,
                                 confidence,
                             )
                         )
@@ -88,20 +87,20 @@ class ChunkMerger:
 
         # Resolve overlaps by prioritizing entities with higher confidence scores.
         # We sort descending by confidence, so we process the best candidates first.
-        scored_entities.sort(key=lambda x: x[4], reverse=True)
+        scored_entities.sort(key=lambda x: x[3], reverse=True)
 
-        final_entities: List[BaseEntity] = []
+        final_spans: List[Tuple[int, int, str]] = []
         claimed_chars: set[int] = set()
 
-        for start, end, entity_type, text, _ in scored_entities:
+        for start, end, entity_type, _ in scored_entities:
             # If the character span of this entity overlaps with one we've already
             # accepted, we discard it.
             if any(c in claimed_chars for c in range(start, end)):
                 continue
 
             # This entity is a high-confidence, non-overlapping candidate. Accept it.
-            final_entities.append(BaseEntity(type=entity_type, text=text))
+            final_spans.append((start, end, entity_type))
             claimed_chars.update(range(start, end))
 
         # Perform a final BIOSES conversion on the clean, merged list of entities.
-        return self.biores_converter.convert(full_text, final_entities)
+        return self.biores_converter.convert(full_text, final_spans)
