@@ -1,5 +1,6 @@
-import pytest
 import re
+
+import pytest
 
 from py_name_entity_recognition.schemas.core_schemas import BaseEntity
 from py_name_entity_recognition.utils.biores_converter import BIOSESConverter

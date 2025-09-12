@@ -1,6 +1,8 @@
 import pytest
 from pydantic import BaseModel
+
 from py_name_entity_recognition import catalog
+
 
 def test_get_schema_with_preset():
     """Test that a valid preset returns a schema with the correct entities."""
@@ -10,10 +12,12 @@ def test_get_schema_with_preset():
     assert "DiseaseOrSyndrome" in schema.model_fields
     assert "AdverseEvent" in schema.model_fields
 
+
 def test_get_schema_with_invalid_preset_raises_value_error():
     """Test that an invalid preset raises a ValueError."""
     with pytest.raises(ValueError, match="Preset 'INVALID_PRESET' not found"):
         catalog.get_schema(preset="INVALID_PRESET")
+
 
 def test_get_schema_with_include_categories():
     """Test that including categories returns a schema with the correct entities."""
@@ -26,6 +30,7 @@ def test_get_schema_with_include_categories():
         else:
             assert entity not in schema.model_fields
 
+
 def test_get_schema_with_include_entities():
     """Test that including specific entities returns a schema with those entities."""
     entities = ["GeneOrGenome", "Protein"]
@@ -34,6 +39,7 @@ def test_get_schema_with_include_entities():
     assert len(schema.model_fields) == len(entities)
     assert "GeneOrGenome" in schema.model_fields
     assert "Protein" in schema.model_fields
+
 
 def test_get_schema_with_exclude_entities():
     """Test that excluding entities removes them from the schema."""
@@ -45,16 +51,21 @@ def test_get_schema_with_exclude_entities():
     assert "Protein" not in schema.model_fields
     assert "CellType" in schema.model_fields
 
+
 def test_get_schema_with_empty_result_raises_value_error():
     """Test that a combination resulting in no entities raises a ValueError."""
     with pytest.raises(ValueError, match="resulted in an empty set of entities"):
-        catalog.get_schema(include_entities=["GeneOrGenome"], exclude_entities=["GeneOrGenome"])
+        catalog.get_schema(
+            include_entities=["GeneOrGenome"], exclude_entities=["GeneOrGenome"]
+        )
+
 
 def test_get_schema_defaults_to_comprehensive():
     """Test that calling get_schema without arguments returns the comprehensive set."""
     schema = catalog.get_schema()
     assert issubclass(schema, BaseModel)
     assert len(schema.model_fields) == len(catalog.ENTITY_REGISTRY)
+
 
 def test_register_entity():
     """Test that a new entity can be registered."""
@@ -68,6 +79,7 @@ def test_register_entity():
     assert key in catalog.ENTITY_REGISTRY
     assert catalog.ENTITY_REGISTRY[key] == definition
 
+
 def test_register_entity_with_existing_key_raises_value_error():
     """Test that registering an existing entity without overwrite raises a ValueError."""
     key = "DiseaseOrSyndrome"
@@ -78,6 +90,7 @@ def test_register_entity_with_existing_key_raises_value_error():
     }
     with pytest.raises(ValueError, match=f"Entity key '{key}' already exists"):
         catalog.register_entity(key, definition)
+
 
 def test_register_entity_with_overwrite():
     """Test that an existing entity can be overwritten."""
