@@ -189,15 +189,30 @@ class CoreEngine:
         return END
 
     def _transform_to_base_entities(self, llm_output: BaseModel) -> List[BaseEntity]:
+        """Recursively flattens a Pydantic model into a list of BaseEntity objects."""
         base_entities: List[BaseEntity] = []
         if not llm_output:
             return base_entities
-        for entity_type, extracted_spans in llm_output.model_dump().items():
-            if not isinstance(extracted_spans, list):
-                extracted_spans = [extracted_spans]
-            for span_text in extracted_spans:
-                if isinstance(span_text, str) and span_text:
-                    base_entities.append(
-                        BaseEntity(type=entity_type.capitalize(), text=span_text)
-                    )
+
+        self._flatten_pydantic_model(llm_output, base_entities)
         return base_entities
+
+    def _flatten_pydantic_model(
+        self, model_or_value, base_entities: List[BaseEntity], parent_key: str = ""
+    ):
+        """
+        Recursively traverses a Pydantic model or dictionary and populates the
+        base_entities list.
+        """
+        if isinstance(model_or_value, BaseModel):
+            for key, value in model_or_value.model_dump().items():
+                self._flatten_pydantic_model(value, base_entities, parent_key=key)
+        elif isinstance(model_or_value, dict):
+            for key, value in model_or_value.items():
+                self._flatten_pydantic_model(value, base_entities, parent_key=key)
+        elif isinstance(model_or_value, list):
+            for item in model_or_value:
+                self._flatten_pydantic_model(item, base_entities, parent_key)
+        elif isinstance(model_or_value, str) and model_or_value:
+            entity_type = parent_key.capitalize() if parent_key else "Unknown"
+            base_entities.append(BaseEntity(type=entity_type, text=model_or_value))

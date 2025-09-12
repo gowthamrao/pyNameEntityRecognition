@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from pydantic import BaseModel, Field
 
 from py_name_entity_recognition.core.engine import CoreEngine
 
@@ -243,3 +244,46 @@ async def test_engine_handles_none_in_entity_list(
     assert result_dict["Alice"] == "S-Person"
     assert result_dict["Bob"] == "S-Person"
     assert "None" not in result_dict
+
+
+async def test_engine_with_complex_nested_schema(fake_llm_factory):
+    """Tests the engine's ability to handle a more complex, nested Pydantic schema."""
+
+    class FlightDetails(BaseModel):
+        flight_number: str = Field(description="The flight number.")
+        airline: str = Field(description="The airline carrier.")
+
+    class Trip(BaseModel):
+        traveler: str = Field(description="Name of the person traveling.")
+        destination: str = Field(description="The final destination city.")
+        flight: FlightDetails = Field(description="Details about the flight.")
+
+    class Booking(BaseModel):
+        """Schema for extracting travel booking details."""
+
+        trip_details: Trip
+
+    text = "Mr. Smith is booked on flight BA2490 to London with British Airways."
+    llm_response = {
+        "trip_details": {
+            "traveler": "Mr. Smith",
+            "destination": "London",
+            "flight": {"flight_number": "BA2490", "airline": "British Airways"},
+        }
+    }
+    responses = [json.dumps(llm_response)]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=Booking)
+
+    result = await engine.run(text, mode="lcel")
+
+    # The CoreEngine flattens the structure, so we check for the leaf values.
+    # The entity type is the capitalized version of the Pydantic field name.
+    result_dict = dict(result)
+
+    assert result_dict["Mr."] == "B-Traveler"
+    assert result_dict["Smith"] == "E-Traveler"
+    assert result_dict["London"] == "S-Destination"
+    assert result_dict["BA2490"] == "S-Flight_number"
+    assert result_dict["British"] == "B-Airline"
+    assert result_dict["Airways"] == "E-Airline"
