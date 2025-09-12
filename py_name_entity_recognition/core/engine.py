@@ -47,6 +47,9 @@ class CoreEngine:
         self._agentic_graph_app = self._build_agentic_graph().compile()
 
     async def run(self, text: str, mode: str = "lcel") -> List[Tuple[str, str]]:
+        if not text or text.isspace():
+            return []
+
         if len(text) <= self.chunk_size:
             entities = await self._get_intermediate_entities(text, mode)
             return self.biores_converter.convert(text, entities)
@@ -72,7 +75,12 @@ class CoreEngine:
     ) -> List[BaseEntity]:
         if mode == "lcel":
             llm_output = await self._run_lcel_chain(text)
-            return self._transform_to_base_entities(llm_output)
+            # Transform and then validate that entities are substrings of the text
+            base_entities = self._transform_to_base_entities(llm_output)
+            validated_entities = [
+                entity for entity in base_entities if entity.text in text
+            ]
+            return validated_entities
         elif mode == "agentic":
             final_state = await self._agentic_graph_app.ainvoke(
                 {
@@ -92,6 +100,14 @@ class CoreEngine:
         )
         chain = prompt_template | structured_llm
         result = await chain.ainvoke({"text_input": text_input})
+
+        # Sanitize the result before validation to handle cases where the LLM
+        # might return None or other non-string values in a list.
+        if isinstance(result, dict):
+            for key, value in result.items():
+                if isinstance(value, list):
+                    result[key] = [item for item in value if isinstance(item, str)]
+
         return self.schema.model_validate(result)
 
     def _build_agentic_graph(self) -> StateGraph:
@@ -173,15 +189,30 @@ class CoreEngine:
         return END
 
     def _transform_to_base_entities(self, llm_output: BaseModel) -> List[BaseEntity]:
+        """Recursively flattens a Pydantic model into a list of BaseEntity objects."""
         base_entities: List[BaseEntity] = []
         if not llm_output:
             return base_entities
-        for entity_type, extracted_spans in llm_output.model_dump().items():
-            if not isinstance(extracted_spans, list):
-                extracted_spans = [extracted_spans]
-            for span_text in extracted_spans:
-                if isinstance(span_text, str) and span_text:
-                    base_entities.append(
-                        BaseEntity(type=entity_type.capitalize(), text=span_text)
-                    )
+
+        self._flatten_pydantic_model(llm_output, base_entities)
         return base_entities
+
+    def _flatten_pydantic_model(
+        self, model_or_value, base_entities: List[BaseEntity], parent_key: str = ""
+    ):
+        """
+        Recursively traverses a Pydantic model or dictionary and populates the
+        base_entities list.
+        """
+        if isinstance(model_or_value, BaseModel):
+            for key, value in model_or_value.model_dump().items():
+                self._flatten_pydantic_model(value, base_entities, parent_key=key)
+        elif isinstance(model_or_value, dict):
+            for key, value in model_or_value.items():
+                self._flatten_pydantic_model(value, base_entities, parent_key=key)
+        elif isinstance(model_or_value, list):
+            for item in model_or_value:
+                self._flatten_pydantic_model(item, base_entities, parent_key)
+        elif isinstance(model_or_value, str) and model_or_value:
+            entity_type = parent_key.capitalize() if parent_key else "Unknown"
+            base_entities.append(BaseEntity(type=entity_type, text=model_or_value))
