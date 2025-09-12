@@ -13,25 +13,27 @@
 
 ## Installation
 
-1.  **Install the package:**
-    Clone the repository and install the package using pip. It is recommended to do this in a virtual environment.
+This project uses [Poetry](https://python-poetry.org/) for dependency management and packaging.
 
+1.  **Clone the repository:**
     ```bash
-    pip install .
+    git clone https://github.com/GowthamRao/py_name_entity_recognition.git
+    cd py_name_entity_recognition
     ```
 
-2.  **Install spaCy Model:**
-    The package uses spaCy for robust tokenization. You'll need to download the default English model.
+2.  **Install dependencies using Poetry:**
+    If you do not have Poetry installed, please follow the [official installation instructions](https://python-poetry.org/docs/#installation).
 
+    Once Poetry is installed, you can install the project dependencies:
     ```bash
-    python -m spacy download en_core_web_sm
+    poetry install
     ```
+    This will create a virtual environment and install all the necessary dependencies, including development dependencies.
 
-3.  **Install Development Dependencies (for testing):**
-    If you wish to run the test suite, you will need to install the development dependencies manually (due to a limitation in some `pip` versions with `pyproject.toml` dependency groups).
-
+3.  **Download spaCy Model:**
+    The package uses spaCy for robust tokenization. You'll need to download the default English model. You can do this using Poetry's `run` command:
     ```bash
-    pip install pytest pytest-asyncio pytest-mock
+    poetry run python -m spacy download en_core_web_sm
     ```
 
 ## Configuration
