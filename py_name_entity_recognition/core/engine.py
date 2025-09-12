@@ -47,6 +47,9 @@ class CoreEngine:
         self._agentic_graph_app = self._build_agentic_graph().compile()
 
     async def run(self, text: str, mode: str = "lcel") -> List[Tuple[str, str]]:
+        if not text or text.isspace():
+            return []
+
         if len(text) <= self.chunk_size:
             entities = await self._get_intermediate_entities(text, mode)
             return self.biores_converter.convert(text, entities)
@@ -72,7 +75,12 @@ class CoreEngine:
     ) -> List[BaseEntity]:
         if mode == "lcel":
             llm_output = await self._run_lcel_chain(text)
-            return self._transform_to_base_entities(llm_output)
+            # Transform and then validate that entities are substrings of the text
+            base_entities = self._transform_to_base_entities(llm_output)
+            validated_entities = [
+                entity for entity in base_entities if entity.text in text
+            ]
+            return validated_entities
         elif mode == "agentic":
             final_state = await self._agentic_graph_app.ainvoke(
                 {
@@ -92,6 +100,14 @@ class CoreEngine:
         )
         chain = prompt_template | structured_llm
         result = await chain.ainvoke({"text_input": text_input})
+
+        # Sanitize the result before validation to handle cases where the LLM
+        # might return None or other non-string values in a list.
+        if isinstance(result, dict):
+            for key, value in result.items():
+                if isinstance(value, list):
+                    result[key] = [item for item in value if isinstance(item, str)]
+
         return self.schema.model_validate(result)
 
     def _build_agentic_graph(self) -> StateGraph:
