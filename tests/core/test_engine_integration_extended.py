@@ -1,10 +1,10 @@
 import os
-import pytest
-from pydantic import BaseModel, Field
 from typing import List
 
-from langchain_openai import ChatOpenAI
+import pytest
 from langchain_community.llms.ollama import Ollama
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 from py_name_entity_recognition.core.engine import CoreEngine
 
@@ -13,7 +13,9 @@ pytestmark = pytest.mark.integration
 
 # Skip all tests in this module if OpenAI API key is not present
 if not os.environ.get("OPENAI_API_KEY"):
-    pytest.skip("OPENAI_API_KEY not found, skipping integration tests", allow_module_level=True)
+    pytest.skip(
+        "OPENAI_API_KEY not found, skipping integration tests", allow_module_level=True
+    )
 
 
 # Fixture to select LLM based on environment variables
@@ -35,6 +37,7 @@ def llm():
                 "Ollama server not found or model not available. Skipping integration tests."
             )
 
+
 geekwire_article_text = """
 A pivotal antitrust ruling aimed at addressing Google’s search monopoly may have handed Microsoft its best competitive opening in many years — but it’s still a slim one, and it’s not clear if the Redmond company will even consider it worth the effort.
 
@@ -49,11 +52,19 @@ That could help Microsoft’s Bing search engine — and by extension its Copilo
 But it’s not clear if Microsoft will try to take advantage of the remedies. Contacted by GeekWire on Wednesday, a spokesperson said the company had no comment on the ruling.
 """
 
+
 class ArticleSchema(BaseModel):
     """Schema for extracting information from a news article."""
-    Person: List[str] = Field(description="The name of a person mentioned in the article.")
-    Organization: List[str] = Field(description="The name of a company or organization.")
-    Location: List[str] = Field(description="A city, state, or country mentioned in the article.")
+
+    Person: List[str] = Field(
+        description="The name of a person mentioned in the article."
+    )
+    Organization: List[str] = Field(
+        description="The name of a company or organization."
+    )
+    Location: List[str] = Field(
+        description="A city, state, or country mentioned in the article."
+    )
 
 
 @pytest.mark.asyncio
@@ -63,10 +74,7 @@ async def test_engine_lcel_mode_with_chunking_integration(llm):
     that requires chunking.
     """
     engine = CoreEngine(
-        model=llm,
-        schema=ArticleSchema,
-        chunk_size=200,
-        chunk_overlap=50
+        model=llm, schema=ArticleSchema, chunk_size=200, chunk_overlap=50
     )
 
     result = await engine.run(geekwire_article_text, mode="lcel")
@@ -97,14 +105,11 @@ async def test_engine_agentic_mode_refinement_integration(llm):
 
     class RefinementSchema(BaseModel):
         """A schema that might cause the LLM to be overly aggressive."""
+
         Product: List[str] = Field(description="The name of a software product.")
         Feature: List[str] = Field(description="A feature of a software product.")
 
-    engine = CoreEngine(
-        model=llm,
-        schema=RefinementSchema,
-        max_retries=1
-    )
+    engine = CoreEngine(model=llm, schema=RefinementSchema, max_retries=1)
 
     result = await engine.run(text, mode="agentic")
 
@@ -126,14 +131,16 @@ async def test_engine_with_numerical_and_date_entities(llm):
 
     class FinancialSchema(BaseModel):
         """Schema for extracting financial and date information."""
-        Organization: List[str] = Field(description="The name of a company or organization.")
-        Money: List[str] = Field(description="An amount of money, including the currency symbol.")
+
+        Organization: List[str] = Field(
+            description="The name of a company or organization."
+        )
+        Money: List[str] = Field(
+            description="An amount of money, including the currency symbol."
+        )
         Date: List[str] = Field(description="A specific date, year, or time period.")
 
-    engine = CoreEngine(
-        model=llm,
-        schema=FinancialSchema
-    )
+    engine = CoreEngine(model=llm, schema=FinancialSchema)
 
     result = await engine.run(text, mode="lcel")
 

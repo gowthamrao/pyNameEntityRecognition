@@ -653,7 +653,7 @@ def get_schema(
         if unknown_entities:
             raise ValueError(
                 "The following entities from 'include_entities' are not in the registry: "
-                f"{', '.join(sorted(list(unknown_entities)))}"  # Sort for consistent error messages
+                f"{', '.join(sorted(unknown_entities))}"  # Sort for consistent error messages
             )
         selected_entity_keys.update(include_entities)
         logger.info(f"Included {len(include_entities)} specific entities.")

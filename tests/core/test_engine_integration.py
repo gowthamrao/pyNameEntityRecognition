@@ -1,10 +1,10 @@
 import os
-import pytest
-from pydantic import BaseModel, Field
 from typing import List
 
-from langchain_openai import ChatOpenAI
+import pytest
 from langchain_community.llms.ollama import Ollama
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 
 from py_name_entity_recognition.core.engine import CoreEngine
 
@@ -13,7 +13,9 @@ pytestmark = pytest.mark.integration
 
 # Skip all tests in this module if OpenAI API key is not present
 if not os.environ.get("OPENAI_API_KEY"):
-    pytest.skip("OPENAI_API_KEY not found, skipping integration tests", allow_module_level=True)
+    pytest.skip(
+        "OPENAI_API_KEY not found, skipping integration tests", allow_module_level=True
+    )
 
 
 # Schema for testing
