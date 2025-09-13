@@ -1,4 +1,4 @@
-name: Python CI
+name: CI
 
 on:
   push:
@@ -44,4 +44,9 @@ jobs:
 
     - name: Test with pytest
       run: |
-        poetry run pytest
+        poetry run pytest --cov=py_name_entity_recognition --cov-report=xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
