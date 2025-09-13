@@ -144,17 +144,26 @@ class CoreEngine:
         llm_output = state.get("llm_output")
         original_text = state["original_text"]
         errors = []
+        validated_entities = []
+
         if not llm_output:
             errors.append("LLM output is empty or invalid.")
-            return {"validation_errors": errors, "validated_entities": None}
+            return {"validation_errors": errors, "validated_entities": []}
+
         entities = self._transform_to_base_entities(llm_output)
         for entity in entities:
-            if entity.text not in original_text:
+            if entity.text in original_text:
+                validated_entities.append(entity)
+            else:
                 errors.append(
                     f"Validation Error: The extracted span '{entity.text}' was not found in the original text."
                 )
+
         if errors:
-            return {"validation_errors": errors, "validated_entities": None}
+            # Even if there are errors, we return the entities that DID pass validation.
+            # The presence of errors will trigger the refine step.
+            return {"validation_errors": errors, "validated_entities": validated_entities}
+
         return {"validation_errors": None, "validated_entities": entities}
 
     async def _refine_node(self, state: AgenticGraphState) -> dict:
