@@ -52,6 +52,42 @@ def test_get_schema_with_exclude_entities():
     assert "CellType" in schema.model_fields
 
 
+def test_get_schema_with_category_and_exclude():
+    """Test combining category inclusion with entity exclusion."""
+    categories = ["CHEMICALS_AND_DRUGS", "DISORDERS_AND_FINDINGS"]
+    exclude = ["PharmacologicSubstance"]  # Exclude one entity from the category
+
+    schema = catalog.get_schema(
+        include_categories=categories, exclude_entities=exclude
+    )
+
+    assert issubclass(schema, BaseModel)
+    # Check that an entity from the excluded list is NOT present
+    assert "PharmacologicSubstance" not in schema.model_fields
+    # Check that other entities from the included categories ARE present
+    assert "DiseaseOrSyndrome" in schema.model_fields
+    assert "SignOrSymptom" in schema.model_fields
+
+
+def test_get_schema_exclude_nonexistent_entity_is_ignored():
+    """Test that trying to exclude an entity that doesn't exist is ignored."""
+    preset = "CLINICAL_TRIAL_CORE"
+    original_schema = catalog.get_schema(preset=preset)
+
+    # "NonExistentEntity" is not in the preset or the registry
+    exclude = ["NonExistentEntity"]
+    schema = catalog.get_schema(preset=preset, exclude_entities=exclude)
+
+    # The schema should be identical to the one without the invalid exclusion
+    assert len(schema.model_fields) == len(original_schema.model_fields)
+
+
+def test_get_schema_include_nonexistent_entity_raises_error():
+    """Test that trying to include an entity that doesn't exist raises a ValueError."""
+    with pytest.raises(ValueError, match="The following entities from 'include_entities' are not in the registry: NonExistentEntity"):
+        catalog.get_schema(include_entities=["GeneOrGenome", "NonExistentEntity"])
+
+
 def test_get_schema_with_empty_result_raises_value_error():
     """Test that a combination resulting in no entities raises a ValueError."""
     with pytest.raises(ValueError, match="resulted in an empty set of entities"):
