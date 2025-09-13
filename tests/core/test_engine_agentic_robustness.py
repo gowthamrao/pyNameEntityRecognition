@@ -1,7 +1,8 @@
 import json
+from typing import List
+
 import pytest
 from pydantic import BaseModel, Field
-from typing import List
 
 from py_name_entity_recognition.core.engine import CoreEngine
 
@@ -12,7 +13,9 @@ class AgenticTestSchema(BaseModel):
     """A schema for agentic mode robustness testing."""
 
     Person: List[str] = Field(description="The name of a person.")
-    Organization: List[str] = Field(description="The name of a company or organization.")
+    Organization: List[str] = Field(
+        description="The name of a company or organization."
+    )
 
 
 async def test_agentic_mode_anti_hallucination(fake_llm_factory):
@@ -40,7 +43,10 @@ async def test_agentic_mode_anti_hallucination(fake_llm_factory):
     result_str = " ".join([f"{token}/{tag}" for token, tag in result])
 
     # Check that the valid entity "Institute of Science" is present
-    assert "Institute/B-Organization of/I-Organization Science/E-Organization" in result_str
+    assert (
+        "Institute/B-Organization of/I-Organization Science/E-Organization"
+        in result_str
+    )
 
     # Check that the hallucinated entity "CyberCorp" is NOT present
     assert "CyberCorp" not in result_str

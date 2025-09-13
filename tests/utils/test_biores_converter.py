@@ -1,8 +1,5 @@
-import re
-
 import pytest
 
-from py_name_entity_recognition.schemas.core_schemas import BaseEntity
 from py_name_entity_recognition.utils.biores_converter import BIOSESConverter
 
 
@@ -101,8 +98,16 @@ def test_biores_converter_overlapping_entities_same_length(converter):
     """Tests that the first of two overlapping entities of the same length is prioritized."""
     text = "He works at the University of New York."
     entities_with_spans = [
-        (text.find("University of New"), text.find("University of New") + len("University of New"), "ORG"),
-        (text.find("of New York"), text.find("of New York") + len("of New York"), "GPE"),
+        (
+            text.find("University of New"),
+            text.find("University of New") + len("University of New"),
+            "ORG",
+        ),
+        (
+            text.find("of New York"),
+            text.find("of New York") + len("of New York"),
+            "GPE",
+        ),
     ]
     result = converter.convert(text, entities_with_spans)
 

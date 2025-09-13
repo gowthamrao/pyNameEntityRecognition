@@ -57,9 +57,7 @@ def test_get_schema_with_category_and_exclude():
     categories = ["CHEMICALS_AND_DRUGS", "DISORDERS_AND_FINDINGS"]
     exclude = ["PharmacologicSubstance"]  # Exclude one entity from the category
 
-    schema = catalog.get_schema(
-        include_categories=categories, exclude_entities=exclude
-    )
+    schema = catalog.get_schema(include_categories=categories, exclude_entities=exclude)
 
     assert issubclass(schema, BaseModel)
     # Check that an entity from the excluded list is NOT present
@@ -84,7 +82,10 @@ def test_get_schema_exclude_nonexistent_entity_is_ignored():
 
 def test_get_schema_include_nonexistent_entity_raises_error():
     """Test that trying to include an entity that doesn't exist raises a ValueError."""
-    with pytest.raises(ValueError, match="The following entities from 'include_entities' are not in the registry: NonExistentEntity"):
+    with pytest.raises(
+        ValueError,
+        match="The following entities from 'include_entities' are not in the registry: NonExistentEntity",
+    ):
         catalog.get_schema(include_entities=["GeneOrGenome", "NonExistentEntity"])
 
 

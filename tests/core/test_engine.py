@@ -142,9 +142,7 @@ async def test_engine_merging_overlapping_entities(fake_llm_factory, test_schema
     ]
     llm = fake_llm_factory(responses)
     # Use chunk settings that cause "Dr. Alice Smith" to be in multiple chunks
-    engine = CoreEngine(
-        model=llm, schema=test_schema, chunk_size=60, chunk_overlap=40
-    )
+    engine = CoreEngine(model=llm, schema=test_schema, chunk_size=60, chunk_overlap=40)
 
     result = await engine.run(text, mode="lcel")
 
@@ -230,9 +228,7 @@ async def test_engine_handles_none_in_entity_list(
     """Tests that the engine handles None values in the entity list gracefully."""
     # The Pydantic model might allow for List[Optional[str]]
     responses = [
-        json.dumps(
-            {"Person": ["Alice", None, "Bob"], "Location": ["Paris", "London"]}
-        )
+        json.dumps({"Person": ["Alice", None, "Bob"], "Location": ["Paris", "London"]})
     ]
     llm = fake_llm_factory(responses)
     engine = CoreEngine(model=llm, schema=test_schema)
