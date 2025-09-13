@@ -1,11 +1,9 @@
-import re
 from typing import List, Optional, Tuple
 
 import spacy
 from spacy.language import Language
 
 from py_name_entity_recognition.observability.logging import logger
-from py_name_entity_recognition.schemas.core_schemas import BaseEntity
 
 
 class BIOSESConverter:
