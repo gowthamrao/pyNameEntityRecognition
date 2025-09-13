@@ -162,7 +162,10 @@ class CoreEngine:
         if errors:
             # Even if there are errors, we return the entities that DID pass validation.
             # The presence of errors will trigger the refine step.
-            return {"validation_errors": errors, "validated_entities": validated_entities}
+            return {
+                "validation_errors": errors,
+                "validated_entities": validated_entities,
+            }
 
         return {"validation_errors": None, "validated_entities": entities}
 

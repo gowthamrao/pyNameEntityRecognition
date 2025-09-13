@@ -1,7 +1,8 @@
 import json
+from typing import List
+
 import pytest
 from pydantic import BaseModel, Field
-from typing import List
 
 from py_name_entity_recognition.core.engine import CoreEngine
 
@@ -13,10 +14,14 @@ class RobustnessTestSchema(BaseModel):
 
     Person: List[str] = Field(description="The name of a person.")
     Location: List[str] = Field(description="The name of a city, state, or country.")
-    Organization: List[str] = Field(description="The name of a company or organization.")
+    Organization: List[str] = Field(
+        description="The name of a company or organization."
+    )
 
 
-@pytest.mark.xfail(reason="Merger cannot currently re-construct entities split across chunks.")
+@pytest.mark.xfail(
+    reason="Merger cannot currently re-construct entities split across chunks."
+)
 async def test_engine_merging_split_entity(fake_llm_factory):
     """
     Tests if the engine can merge an entity split across chunk boundaries.
@@ -30,11 +35,9 @@ async def test_engine_merging_split_entity(fake_llm_factory):
 
     # Mock LLM to return partial matches from each chunk
     responses = [
+        json.dumps({"Person": [], "Location": [], "Organization": []}),  # From chunk 1
         json.dumps(
-            {"Person": [], "Location": [], "Organization": []}
-        ),  # From chunk 1
-        json.dumps(
-                {"Person": [], "Location": ["Francisco", "London"], "Organization": []}
+            {"Person": [], "Location": ["Francisco", "London"], "Organization": []}
         ),  # From chunk 2
     ]
     llm = fake_llm_factory(responses)
@@ -67,9 +70,7 @@ async def test_engine_merging_conflicting_entity_types(fake_llm_factory):
         json.dumps(
             {"Person": [], "Location": [], "Organization": ["University of New"]}
         ),
-        json.dumps(
-            {"Person": [], "Location": ["New York"], "Organization": []}
-        ),
+        json.dumps({"Person": [], "Location": ["New York"], "Organization": []}),
     ]
     llm = fake_llm_factory(responses)
     engine = CoreEngine(
@@ -83,7 +84,9 @@ async def test_engine_merging_conflicting_entity_types(fake_llm_factory):
     result_str = " ".join([f"{token}/{tag}" for token, tag in result])
 
     # The higher-confidence entity (ORG) should be kept.
-    assert "University/B-Organization of/I-Organization New/E-Organization" in result_str
+    assert (
+        "University/B-Organization of/I-Organization New/E-Organization" in result_str
+    )
     # The lower-confidence, overlapping entity (GPE) should be discarded.
     assert "New/B-Location" not in result_str
     assert "York/S-Location" not in result_str
@@ -113,7 +116,10 @@ async def test_engine_nested_entities(fake_llm_factory):
     result_str = " ".join([f"{token}/{tag}" for token, tag in result])
 
     # Check that the larger entity "University of Washington" is identified correctly.
-    assert "University/B-Organization of/I-Organization Washington/E-Organization" in result_str
+    assert (
+        "University/B-Organization of/I-Organization Washington/E-Organization"
+        in result_str
+    )
 
     # Check that the second, standalone "Washington" is identified as a location.
     # Note: The result_str will contain two "Washington" tokens.
