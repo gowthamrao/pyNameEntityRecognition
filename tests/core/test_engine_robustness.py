@@ -185,3 +185,55 @@ async def test_engine_with_list_of_entities(fake_llm_factory):
     assert result_dict.get("Alice") == "S-Person"
     assert result_dict.get("Bob") == "S-Person"
     assert result_dict.get("Carol") == "S-Person"
+
+
+async def test_engine_ambiguous_entities(fake_llm_factory):
+    """
+    Tests that the engine can disambiguate entities based on context.
+    "Washington" can be a person, location, or organization.
+    """
+    text = "George Washington visited Washington, D.C., not the state of Washington."
+
+    responses = [
+        json.dumps(
+            {
+                "Person": ["George Washington"],
+                "Location": ["Washington, D.C.", "Washington"],
+                "Organization": [],
+            }
+        )
+    ]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=RobustnessTestSchema)
+
+    result = await engine.run(text, mode="lcel")
+    result_str = " ".join([f"{token}/{tag}" for token, tag in result])
+
+    # Check that "George Washington" is a person
+    assert "George/B-Person Washington/E-Person" in result_str
+    # Check that "Washington, D.C." is a location
+    assert "Washington/B-Location ,/I-Location D.C./E-Location" in result_str
+    # Check that the standalone "Washington" is a location
+    assert "of/O Washington/S-Location ./O" in result_str
+
+
+async def test_engine_with_no_entities_in_text(fake_llm_factory):
+    """
+    Tests that the engine returns an empty result when no entities are found.
+    """
+    text = "This is a sentence with no people, places, or companies."
+
+    # Mock LLM to return an empty JSON object
+    responses = [json.dumps({"Person": [], "Location": [], "Organization": []})]
+    llm = fake_llm_factory(responses)
+    engine = CoreEngine(model=llm, schema=RobustnessTestSchema)
+
+    result = await engine.run(text, mode="lcel")
+
+    # The result should be a list of tuples with all 'O' tags
+    all_o_tags = all(tag == "O" for _, tag in result)
+    assert all_o_tags
+    # Verify the length is correct by tokenizing the original text
+    # using the engine's tokenizer
+    doc = engine.biores_converter.nlp(text)
+    assert len(result) == len([token.text for token in doc])
